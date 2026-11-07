@@ -11,7 +11,7 @@ import {
 } from "react";
 import { createInitialData } from "@/lib/mock-data";
 import { todayISO, weekdayIndex } from "@/lib/date";
-import { isValidProfessorCode } from "@/lib/access";
+import { findRegisteredTeacher } from "@/lib/access";
 import { validateEmail } from "@/lib/email";
 import type {
   Activity,
@@ -30,7 +30,7 @@ type ActivityInput = Omit<Activity, "id" | "createdAt">;
 
 type StoreValue = DataState & {
   user: SessionUser | null;
-  login: (email: string, role: UserRole, code?: string) => boolean;
+  login: (email: string, role: UserRole) => boolean;
   logout: () => void;
   getReservation: (spaceId: string, date: string, slotId: string) => Reservation | undefined;
   getBlock: (spaceId: string, date: string, slotId: string) => Block | undefined;
@@ -119,14 +119,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [state, ready]);
 
-  const login = useCallback((email: string, role: UserRole, code = "") => {
+  const login = useCallback((email: string, role: UserRole) => {
     const result = validateEmail(email);
     if (!result.ok) return false;
-    if (role === "professor" && !isValidProfessorCode(code)) return false;
+    const teacher =
+      role === "professor" ? findRegisteredTeacher(result.email) : undefined;
+    if (role === "professor" && !teacher) return false;
     const cleanEmail = result.email;
     const nextUser: SessionUser = {
       email: cleanEmail,
-      name: nameFromEmail(cleanEmail),
+      name: teacher?.name ?? nameFromEmail(cleanEmail),
       role,
     };
     setUser(nextUser);

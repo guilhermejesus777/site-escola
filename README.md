@@ -62,7 +62,7 @@ npm start       # serve o build
 
 ## O que é simulado
 
-- **Login e permissões:** não há senha nem autenticação real. O e-mail é validado e só são aceitos domínios conhecidos (`@gmail.com`, `@hotmail.com`, `@outlook.com`, `@yahoo.com`, `@icloud.com` e `@escola.pr.gov.br`). O perfil de **professor** também exige um **código de acesso** da coordenação (padrão do protótipo: `1234`, em `src/lib/access.ts`). O nome é derivado do e-mail (`ana.souza@escola.com` → "Ana Souza") e o perfil escolhido fica salvo no navegador.
+- **Login e permissões:** não há senha nem autenticação real. O e-mail é validado e só são aceitos domínios conhecidos (`@gmail.com`, `@hotmail.com`, `@outlook.com`, `@yahoo.com`, `@icloud.com` e `@escola.pr.gov.br`). O perfil de **professor** só é liberado para e-mails cadastrados na lista de professores (`src/lib/access.ts`); os demais recebem a mensagem para falar com a coordenação. O nome é derivado do e-mail (`ana.souza@escola.com` → "Ana Souza") e o perfil escolhido fica salvo no navegador.
 - **Dados:** não há dados de exemplo. Reservas e atividades são criadas pelos usuários e ficam apenas neste navegador.
 - **Upload:** os arquivos não são enviados; só o nome e o tamanho são guardados.
 - **Configurações:** os ajustes da tela de configurações não são salvos (só a limpeza dos dados funciona).

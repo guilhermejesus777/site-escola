@@ -11,7 +11,7 @@ import {
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button, Field, inputClass } from "@/components/ui";
-import { isValidProfessorCode } from "@/lib/access";
+import { isRegisteredTeacher } from "@/lib/access";
 import { ALLOWED_DOMAINS_LABEL, validateEmail } from "@/lib/email";
 import { useStore } from "@/lib/store";
 import type { UserRole } from "@/types";
@@ -30,7 +30,7 @@ const ROLES: Record<
   professor: {
     label: "Professor",
     article: "o",
-    description: "Reservar espaços e publicar atividades. Requer código da coordenação.",
+    description: "Reservar espaços e publicar atividades. Requer e-mail cadastrado pela coordenação.",
     icon: IconPresentation,
     tone: "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300",
   },
@@ -40,12 +40,10 @@ export function LoginScreen() {
   const { login } = useStore();
   const [role, setRole] = useState<UserRole | null>(null);
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   function chooseRole(next: UserRole) {
     setRole(next);
-    setCode("");
     setError(null);
   }
 
@@ -61,11 +59,13 @@ export function LoginScreen() {
       );
       return;
     }
-    if (role === "professor" && !isValidProfessorCode(code)) {
-      setError("Código de acesso inválido. Confira com a coordenação da escola.");
+    if (role === "professor" && !isRegisteredTeacher(result.email)) {
+      setError("Este e-mail não está cadastrado como professor. Fale com a coordenação.");
       return;
     }
-    login(result.email, role, code);
+    if (!login(result.email, role)) {
+      setError("Não foi possível entrar. Confira o e-mail e o perfil escolhido.");
+    }
   }
 
   return (
@@ -135,7 +135,6 @@ export function LoginScreen() {
                 type="button"
                 onClick={() => {
                   setRole(null);
-                  setCode("");
                   setError(null);
                 }}
                 className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 transition hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
@@ -164,7 +163,7 @@ export function LoginScreen() {
               </div>
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 {role === "professor"
-                  ? "Informe o seu e-mail da escola e o código de acesso da coordenação."
+                  ? "Informe o e-mail cadastrado pela coordenação da escola."
                   : "Informe o seu e-mail da escola para acessar a agenda."}
               </p>
 
@@ -172,7 +171,11 @@ export function LoginScreen() {
                 <Field
                   label="E-mail"
                   required
-                  hint={`Aceitos: ${ALLOWED_DOMAINS_LABEL}.`}
+                  hint={
+                    role === "professor"
+                      ? "Use o e-mail de professor cadastrado pela coordenação."
+                      : `Aceitos: ${ALLOWED_DOMAINS_LABEL}.`
+                  }
                 >
                   <input
                     type="email"
@@ -180,7 +183,11 @@ export function LoginScreen() {
                     autoComplete="email"
                     autoFocus
                     className={inputClass}
-                    placeholder="nome.sobrenome@gmail.com"
+                    placeholder={
+                      role === "professor"
+                        ? "nome.sobrenome@escola.pr.gov.br"
+                        : "nome.sobrenome@gmail.com"
+                    }
                     value={email}
                     onChange={(event) => {
                       setEmail(event.target.value);
@@ -188,27 +195,6 @@ export function LoginScreen() {
                     }}
                   />
                 </Field>
-
-                {role === "professor" ? (
-                  <Field
-                    label="Código de acesso"
-                    required
-                    hint="Código fornecido pela coordenação da escola."
-                  >
-                    <input
-                      type="password"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      className={inputClass}
-                      placeholder="••••"
-                      value={code}
-                      onChange={(event) => {
-                        setCode(event.target.value);
-                        if (error) setError(null);
-                      }}
-                    />
-                  </Field>
-                ) : null}
 
                 {error ? (
                   <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[11px] font-medium text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
