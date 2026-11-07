@@ -231,8 +231,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const clearData = useCallback(() => {
+    if (user?.role !== "professor") return;
     setState(createInitialData());
-  }, []);
+  }, [user]);
 
   const value = useMemo<StoreValue>(
     () => ({
