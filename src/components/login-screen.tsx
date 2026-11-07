@@ -11,6 +11,7 @@ import {
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button, Field, inputClass } from "@/components/ui";
+import { ALLOWED_DOMAINS_LABEL, validateEmail } from "@/lib/email";
 import { useStore } from "@/lib/store";
 import type { UserRole } from "@/types";
 
@@ -34,10 +35,6 @@ const ROLES: Record<
   },
 };
 
-function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
 export function LoginScreen() {
   const { login } = useStore();
   const [role, setRole] = useState<UserRole | null>(null);
@@ -52,12 +49,16 @@ export function LoginScreen() {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!role) return;
-    const clean = email.trim();
-    if (!isValidEmail(clean)) {
-      setError("Digite um e-mail válido, como nome@escola.com.");
+    const result = validateEmail(email);
+    if (!result.ok) {
+      setError(
+        result.reason === "dominio"
+          ? `Domínio não aceito. Use um destes: ${ALLOWED_DOMAINS_LABEL}.`
+          : "Digite um e-mail válido, como nome@gmail.com.",
+      );
       return;
     }
-    login(clean, role);
+    login(result.email, role);
   }
 
   return (
@@ -158,14 +159,18 @@ export function LoginScreen() {
               </p>
 
               <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                <Field label="E-mail" required>
+                <Field
+                  label="E-mail"
+                  required
+                  hint={`Aceitos: ${ALLOWED_DOMAINS_LABEL}.`}
+                >
                   <input
                     type="email"
                     inputMode="email"
                     autoComplete="email"
                     autoFocus
                     className={inputClass}
-                    placeholder="nome.sobrenome@escola.com"
+                    placeholder="nome.sobrenome@gmail.com"
                     value={email}
                     onChange={(event) => {
                       setEmail(event.target.value);

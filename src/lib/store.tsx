@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createInitialData } from "@/lib/mock-data";
 import { todayISO, weekdayIndex } from "@/lib/date";
+import { validateEmail } from "@/lib/email";
 import type {
   Activity,
   Block,
@@ -118,7 +119,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [state, ready]);
 
   const login = useCallback((email: string, role: UserRole) => {
-    const cleanEmail = email.trim().toLowerCase();
+    const result = validateEmail(email);
+    if (!result.ok) return;
+    const cleanEmail = result.email;
     const nextUser: SessionUser = {
       email: cleanEmail,
       name: nameFromEmail(cleanEmail),
