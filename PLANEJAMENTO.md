@@ -3,7 +3,7 @@
 > **Projeto:** plataforma web para a escola reservar o laboratório de informática sem conflitos de horário e acompanhar provas e atividades a entregar.
 > **Versão do documento:** 1.0
 > **Data:** 07/11/2026
-> **Status:** em validação com a coordenação
+> **Status:** em validação com a coordenação · protótipo navegável em [`src/`](./src) (veja o [`README.md`](./README.md))
 
 ---
 
