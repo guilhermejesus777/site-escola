@@ -11,17 +11,26 @@ npm run dev
 
 Acesse `http://localhost:3000` no computador ou no celular (mesma rede: use o endereço `Network` que aparece no terminal).
 
-> Os dados são fictícios e ficam salvos **somente no navegador usado**. Para voltar ao estado inicial: **Configurações → Restaurar dados**.
+> O app começa **vazio**: sem reservas, atividades ou bloqueios de exemplo. Tudo o que aparece é criado durante a demonstração e fica salvo **somente no navegador usado**. Para limpar tudo: **Configurações → Limpar dados**.
 
 ## Roteiro sugerido
 
-### 1. Painel inicial (30 s)
+### 1. Login (1 min)
+
+1. Na tela inicial, escolha **Sou professor**.
+2. Informe um e-mail da escola (ex.: `ana.souza@escola.com`) e clique em **Entrar**.
+3. Mostre que o nome do perfil é criado a partir do e-mail (Ana Souza) e que a sessão continua ativa ao recarregar a página.
+4. No fim da demonstração, mostre o **Sair** e repita o login como **Sou aluno** para comparar as permissões.
+
+> Alunos enxergam o calendário e a agenda em modo somente leitura: não há botões de reservar, cancelar, publicar ou excluir, e Configurações fica oculta.
+
+### 2. Painel inicial (30 s)
 
 - Mostra a próxima reserva do professor, quantas entregas e provas estão chegando.
 - “Agenda da escola” dá a visão geral do que está reservado.
 - Clique em **Reservar horário**.
 
-### 2. Reservar o laboratório (2 min)
+### 3. Reservar o laboratório (2 min)
 
 1. Escolha um horário **Livre** no calendário (célula pontilhada).
 2. Selecione turma e disciplina, escreva a finalidade (ex.: “Pesquisa sobre biomas”).
@@ -33,17 +42,17 @@ Acesse `http://localhost:3000` no computador ou no celular (mesma rede: use o en
 
 **Ponto-chave:** “Não existe risco de dois professores reservarem o mesmo horário.”
 
-### 3. Conflito e bloqueio (1 min)
+### 4. Conflito e bloqueio (1 min)
 
 - Tente reservar o mesmo horário: o sistema não permite (o horário já está ocupado).
-- Mostre uma célula **Bloqueada** (listrada): é um bloqueio da coordenação, com motivo (ex.: manutenção dos computadores).
+- Explique que células **Bloqueadas** (listradas) são bloqueios da coordenação, com motivo (ex.: manutenção dos computadores).
 
-### 4. Cancelar (30 s)
+### 5. Cancelar (30 s)
 
 - Em **Minhas próximas reservas**, clique em **Cancelar**.
 - O horário volta a ficar livre imediatamente.
 
-### 5. Publicar uma prova/atividade (2 min)
+### 6. Publicar uma prova/atividade (2 min)
 
 1. Vá em **Provas e atividades → Nova atividade**.
 2. Preencha título, tipo (prova/trabalho/seminário), turma e disciplina.
@@ -54,12 +63,13 @@ Acesse `http://localhost:3000` no computador ou no celular (mesma rede: use o en
    - a lista **Próximas entregas**;
    - o detalhe com orientações e anexos.
 
-### 6. Filtro por turma, permissões e tema (1 min)
+### 7. Filtro por turma, permissões e tema (1 min)
 
 - Filtre por “7º ano A” e mostre que a agenda muda.
-- Use o botão de **sol/lua** no topo para alternar entre modo claro e escuro; mostre que o calendário e as turmas acompanham o tema e que a escolha permanece ao recarregar.
-- Abra **Configurações** e mostre a prévia do painel da coordenação: espaços, grade de horários, regras e permissões.
-- Explique que **alunos só veem a própria turma** e que **reservas são automáticas** (a coordenação pode bloquear horários).
+- Use o botão de **sol/lua** no topo para alternar entre modo claro e escuro; mostre que o calendário, as turmas e o login acompanham o tema e que a escolha permanece ao recarregar.
+- Abra **Configurações** (como professor) e mostre o painel da coordenação: espaços, grade de horários, regras e permissões.
+- Explique que **reservas são automáticas** (a coordenação pode bloquear horários) e que **alunos só consultam**.
+- Encerre com **Sair**, entre como aluno e mostre a mesma agenda sem os botões de escrita.
 
 ## Perguntas para colher no piloto
 
@@ -72,9 +82,10 @@ Acesse `http://localhost:3000` no computador ou no celular (mesma rede: use o en
 
 ## Limitações (dizer com transparência)
 
-- Não há login real: todos entram como “Ana Souza”.
+- O login é simulado: não há senha nem validação no servidor — basta um e-mail válido e a escolha do perfil.
+- O app começa vazio; nenhuma reserva ou atividade é criada automaticamente.
 - Os arquivos **não são enviados** de verdade.
-- As configurações da última tela **não são salvas**.
+- As configurações da tela de configurações **não são salvas** (a limpeza dos dados funciona).
 - Os dados não são compartilhados entre dispositivos: cada navegador tem sua própria cópia.
 
 ## O que muda na versão de produção
@@ -82,7 +93,7 @@ Acesse `http://localhost:3000` no computador ou no celular (mesma rede: use o en
 | Protótipo | Produção |
 |---|---|
 | Dados no navegador | Banco PostgreSQL na nuvem |
-| Usuário fixo | Login por e-mail + perfis |
+| Login simulado por perfil e e-mail | Login real por e-mail + perfis |
 | Anexos só com nome | Upload real em storage |
 | Regras na tela | Regras validadas no servidor |
 | Sem notificações | Avisos no app (e e-mail na fase 2) |

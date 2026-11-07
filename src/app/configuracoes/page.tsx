@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import {
   IconAlert,
   IconBall,
@@ -77,12 +78,36 @@ const PERMISSIONS = [
 ];
 
 export default function ConfiguracoesPage() {
-  const { resetDemo } = useStore();
+  const { clearData, user } = useStore();
   const [autoApprove, setAutoApprove] = useState(true);
   const [limitReservations, setLimitReservations] = useState(false);
   const [notifyStudents, setNotifyStudents] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const closeToast = useCallback(() => setToast(null), []);
+
+  if (user?.role !== "professor") {
+    return (
+      <div className="animate-fade-in flex min-h-[60vh] items-center justify-center">
+        <div className="max-w-sm rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300">
+            <IconAlert width={22} height={22} />
+          </span>
+          <h1 className="mt-3 text-lg font-semibold text-slate-900 dark:text-slate-100">
+            Acesso restrito
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Apenas professores podem ver as configurações da escola.
+          </p>
+          <Link
+            href="/"
+            className="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700"
+          >
+            Voltar ao início
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -103,7 +128,7 @@ export default function ConfiguracoesPage() {
         <IconAlert width={16} height={16} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
         <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
           <strong className="font-semibold">Prévia do painel administrativo.</strong> Nesta
-          demonstração os ajustes abaixo não são salvos de verdade e servem apenas para mostrar
+          demonstração os ajustes abaixo não são salvos de verdade — servem apenas para mostrar
           como a coordenação vai operar o sistema.
         </p>
       </div>
@@ -272,21 +297,21 @@ export default function ConfiguracoesPage() {
 
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900">
         <div>
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Dados de demonstração</p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Limpar dados salvos</p>
           <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-            Restaura as reservas e atividades de exemplo salvas neste navegador.
+            Apaga todas as reservas e atividades deste navegador. A sessão continua ativa.
           </p>
         </div>
         <Button
           variant="secondary"
           onClick={() => {
-            if (window.confirm("Restaurar os dados de exemplo? Suas alterações serão perdidas.")) {
-              resetDemo();
-              setToast("Dados de exemplo restaurados.");
+            if (window.confirm("Apagar todas as reservas e atividades salvas neste navegador?")) {
+              clearData();
+              setToast("Dados apagados. O app voltou a ficar vazio.");
             }
           }}
         >
-          Restaurar dados
+          Limpar dados
         </Button>
       </div>
 

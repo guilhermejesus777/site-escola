@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { StoreProvider } from "@/lib/store";
-import { AppShell } from "@/components/app-shell";
+import { AuthGate } from "@/components/auth-gate";
 
 const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("site-escola:tema");var d=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light";}catch(e){}})();`;
 
@@ -24,7 +24,7 @@ export default function RootLayout({
           {THEME_SCRIPT}
         </Script>
         <StoreProvider>
-          <AppShell>{children}</AppShell>
+          <AuthGate>{children}</AuthGate>
         </StoreProvider>
       </body>
     </html>

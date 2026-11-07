@@ -235,3 +235,34 @@ export function IconMoon(props: IconProps) {
     </svg>
   );
 }
+
+export function IconGraduationCap(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M22 10 12 5 2 10l10 5 10-5Z" />
+      <path d="M6 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5" />
+      <path d="M22 10v6" />
+    </svg>
+  );
+}
+
+export function IconPresentation(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M2 3h20" />
+      <path d="M3 3v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V3" />
+      <path d="m8 21 4-6 4 6" />
+      <path d="M12 15v-4" />
+    </svg>
+  );
+}
+
+export function IconLogOut(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  );
+}

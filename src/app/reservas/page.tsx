@@ -37,7 +37,7 @@ import {
   toISO,
   WEEKDAY_SHORT,
 } from "@/lib/date";
-import { CLASSES, CURRENT_USER, SLOTS, SPACES, SUBJECTS } from "@/lib/mock-data";
+import { CLASSES, SLOTS, SPACES, SUBJECTS } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import type { Space } from "@/types";
 
@@ -74,7 +74,11 @@ export default function ReservasPage() {
     getBlock,
     bookReservation,
     cancelReservation,
+    user,
   } = useStore();
+
+  const isProfessor = user?.role === "professor";
+  const userName = user?.name ?? "";
 
   const [spaceId, setSpaceId] = useState<string>(SPACES[0].id);
   const [weekStart, setWeekStart] = useState<Date>(() => planningWeekStart());
@@ -112,14 +116,17 @@ export default function ReservasPage() {
 
   const myReservations = useMemo(
     () =>
-      reservations
-        .filter((item) => item.teacher === CURRENT_USER && item.date >= today)
+      (isProfessor
+        ? reservations.filter((item) => item.teacher === userName)
+        : reservations
+      )
+        .filter((item) => item.date >= today)
         .sort((a, b) =>
           a.date === b.date
             ? slotOrder(a.slotId) - slotOrder(b.slotId)
             : a.date.localeCompare(b.date),
         ),
-    [reservations, today],
+    [reservations, today, isProfessor, userName],
   );
 
   function openBooking(date: string, slotId: string) {
@@ -156,7 +163,7 @@ export default function ReservasPage() {
       classId,
       subject,
       purpose: purpose.trim(),
-      teacher: CURRENT_USER,
+      teacher: userName,
     });
     if (result) {
       setError(result);
@@ -191,13 +198,17 @@ export default function ReservasPage() {
             Reservas de espaços
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Escolha um horário livre e reserve na hora, sem conflito de agendas.
+            {isProfessor
+              ? "Escolha um horário livre e reserve na hora, sem conflito de agendas."
+              : "Veja os horários livres e as reservas dos professores nos espaços da escola."}
           </p>
         </div>
-        <Button onClick={openNextFree}>
-          <IconPlus width={16} height={16} />
-          Nova reserva
-        </Button>
+        {isProfessor ? (
+          <Button onClick={openNextFree}>
+            <IconPlus width={16} height={16} />
+            Nova reserva
+          </Button>
+        ) : null}
       </div>
 
       {/* Seletor de espaço */}
@@ -276,7 +287,7 @@ export default function ReservasPage() {
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm border border-indigo-300 bg-indigo-100 dark:border-indigo-400/40 dark:bg-indigo-500/25" />
-              Sua reserva
+              {isProfessor ? "Sua reserva" : "Reserva"}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm border border-slate-300 bg-slate-100 dark:border-slate-600 dark:bg-slate-800" />
@@ -340,7 +351,7 @@ export default function ReservasPage() {
                   {dayISOs.map((date) => {
                     const reservation = getReservation(spaceId, date, slot.id);
                     const block = getBlock(spaceId, date, slot.id);
-                    const mine = reservation?.teacher === CURRENT_USER;
+                    const mine = isProfessor && reservation?.teacher === userName;
                     const past = isPast(date);
 
                     if (reservation) {
@@ -398,19 +409,23 @@ export default function ReservasPage() {
                       <button
                         key={date}
                         type="button"
-                        disabled={past}
+                        disabled={past || !isProfessor}
                         onClick={() => openBooking(date, slot.id)}
                         className={`group flex min-h-[70px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 px-2 py-1.5 text-slate-400 dark:text-slate-500 transition ${
-                          past
-                            ? "cursor-not-allowed opacity-40"
+                          past || !isProfessor
+                            ? "cursor-default opacity-60"
                             : "hover:border-indigo-300 hover:bg-indigo-50/60 dark:hover:border-indigo-400/50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-300"
                         }`}
-                        aria-label={`Reservar ${space.name} em ${formatDateBR(date)} às ${slot.start}`}
+                        aria-label={
+                          isProfessor
+                            ? `Reservar ${space.name} em ${formatDateBR(date)} às ${slot.start}`
+                            : `Horário livre em ${formatDateBR(date)} às ${slot.start}`
+                        }
                       >
                         <IconPlus
                           width={15}
                           height={15}
-                          className="opacity-0 transition group-hover:opacity-100"
+                          className={isProfessor ? "opacity-0 transition group-hover:opacity-100" : "hidden"}
                         />
                         <span className="text-[10px] font-medium">Livre</span>
                       </button>
@@ -443,9 +458,13 @@ export default function ReservasPage() {
       <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white shadow-sm dark:bg-slate-900">
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Minhas próximas reservas</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {isProfessor ? "Minhas próximas reservas" : "Próximas reservas da escola"}
+            </h2>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              Cancelamentos até 2 horas antes do horário.
+              {isProfessor
+                ? "Cancelamentos até 2 horas antes do horário."
+                : "Horários já reservados pelos professores."}
             </p>
           </div>
           <Badge tone="indigo">{myReservations.length}</Badge>
@@ -457,7 +476,11 @@ export default function ReservasPage() {
               <EmptyState
                 icon={<IconCalendar />}
                 title="Nenhuma reserva futura"
-                description="Clique em um horário livre no calendário acima para fazer sua primeira reserva."
+                description={
+                  isProfessor
+                    ? "Clique em um horário livre no calendário acima para fazer sua primeira reserva."
+                    : "Quando os professores reservarem espaços, as reservas aparecem aqui."
+                }
               />
             </div>
           ) : (
@@ -504,15 +527,17 @@ export default function ReservasPage() {
                     <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
                       {relativeDay(item.date)}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleCancel(item.id, item.purpose)}
-                      className="text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
-                    >
-                      <IconTrash width={13} height={13} />
-                      Cancelar
-                    </Button>
+                    {isProfessor ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCancel(item.id, item.purpose)}
+                        className="text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
+                      >
+                        <IconTrash width={13} height={13} />
+                        Cancelar
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
               );

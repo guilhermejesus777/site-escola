@@ -5,24 +5,25 @@ App web para a escola resolver dois problemas em um só lugar:
 1. **Reservas de espaços** — calendário digital para reservar o laboratório de informática (e outros espaços) sem conflito de horários.
 2. **Provas e atividades** — agenda de provas, trabalhos e entregas com anexos, organizada por turma.
 
-> **Status:** protótipo navegável com dados fictícios. Toda a interface já funciona no navegador; o próximo passo é conectar um banco de dados e login reais.
+> **Status:** protótipo navegável com login simulado e app começando vazio. O próximo passo é conectar um banco de dados e autenticação reais.
 >
 > Planejamento completo: [`PLANEJAMENTO.md`](./PLANEJAMENTO.md) · Roteiro de demonstração: [`docs/PROTOTIPO.md`](./docs/PROTOTIPO.md)
 
 ## Prévia
 
-| Reservas de espaços | Provas e atividades |
-|---|---|
-| ![Calendário de reservas](docs/preview-reservas.jpg) | ![Agenda de provas e atividades](docs/preview-atividades.jpg) |
+| Login (Aluno ou Professor) | Reservas de espaços | Provas e atividades |
+|---|---|---|
+| ![Tela de login](docs/preview-login.jpg) | ![Calendário de reservas](docs/preview-reservas.jpg) | ![Agenda de provas e atividades](docs/preview-atividades.jpg) |
 
 ## Telas
 
 | Rota | Tela | O que faz |
 |---|---|---|
-| `/` | Início | Próxima reserva, indicadores, agenda da escola e próximas entregas. |
+| `/` | Login | Escolha entre **Aluno** e **Professor**, depois informe o e-mail da escola. A sessão fica salva no navegador. |
+| `/` (logado) | Início | Próxima reserva, indicadores, agenda da escola e próximas entregas. |
 | `/reservas` | Reservas | Calendário semanal por espaço, reserva em 2 cliques, cancelamento, bloqueios da coordenação e ocupação da semana. |
 | `/atividades` | Provas e atividades | Calendário mensal, lista de próximas entregas, detalhe com anexos e publicação de nova atividade. |
-| `/configuracoes` | Configurações | Prévia do painel da coordenação: espaços, grade de horários, regras e permissões. |
+| `/configuracoes` | Configurações | Painel da coordenação (somente professor): espaços, grade de horários, regras, permissões e limpeza dos dados. |
 
 ## Como rodar
 
@@ -47,21 +48,24 @@ npm start       # serve o build
 
 ## O que já funciona
 
+- **Login simulado em duas etapas:** primeiro escolha **Aluno** ou **Professor**, depois informe o e-mail da escola (sem senha). A sessão fica salva no navegador.
+- **Permissões por perfil:** professores podem reservar espaços, cancelar reservas, publicar e excluir atividades e abrir as configurações; alunos têm acesso somente leitura e não veem Configurações.
+- **App começa vazio:** sem reservas, atividades ou bloqueios de exemplo. Tudo o que aparece é criado pelos usuários.
 - Reserva automática de horário livre com **prevenção de conflito** (o horário fica indisponível na hora).
 - Bloqueio de horários pela coordenação (manutenção, reunião) e horários passados desabilitados.
 - Cancelamento das próprias reservas.
 - Publicação de provas/atividades com data da prova, prazo de entrega e anexos (nome e tamanho).
 - Filtro por turma, calendário mensal com marcadores e detalhe da atividade.
-- **Modo escuro** com botão de alternância (claro/escuro), aplicado ao calendário, às turmas e a todas as telas; a escolha fica salva no navegador.
-- Persistência local no navegador (`localStorage`), então as alterações sobrevivem ao recarregar.
+- **Modo escuro** com botão de alternância (claro/escuro), aplicado ao calendário, às turmas, ao login e a todas as telas; a escolha fica salva no navegador.
+- Persistência local no navegador (`localStorage`), então a sessão e as alterações sobrevivem ao recarregar.
 - Layout responsivo: barra lateral no computador, navegação inferior no celular.
 
 ## O que é simulado
 
-- **Login e permissões:** existe um usuário fixo (Ana Souza). Não há autenticação real.
-- **Dados:** reservas, atividades e turmas são fictícios.
+- **Login e permissões:** não há senha nem autenticação real. O e-mail é validado e o nome é derivado dele (`ana.souza@escola.com` → "Ana Souza"); o perfil escolhido fica salvo no navegador.
+- **Dados:** não há dados de exemplo. Reservas e atividades são criadas pelos usuários e ficam apenas neste navegador.
 - **Upload:** os arquivos não são enviados; só o nome e o tamanho são guardados.
-- **Configurações:** os ajustes da tela de configurações não são salvos.
+- **Configurações:** os ajustes da tela de configurações não são salvos (só a limpeza dos dados funciona).
 - **Backend:** não há banco de dados nem API.
 
 ## Tecnologia
@@ -83,13 +87,15 @@ src/
 │   ├── atividades/page.tsx # agenda de provas e entregas
 │   └── configuracoes/page.tsx
 ├── components/
-│   ├── app-shell.tsx       # navegação lateral/inferior
+│   ├── app-shell.tsx       # navegação lateral/inferior e perfil
+│   ├── auth-gate.tsx       # alterna login e app conforme a sessão
+│   ├── login-screen.tsx    # login em duas etapas (perfil + e-mail)
 │   ├── icons.tsx           # ícones SVG
 │   └── ui.tsx              # botões, modal, badges, toast…
 ├── lib/
 │   ├── date.ts             # utilidades de data (pt-BR)
-│   ├── mock-data.ts        # espaços, horários, turmas e dados de exemplo
-│   └── store.tsx           # estado global + persistência local
+│   ├── mock-data.ts        # espaços, horários e turmas (sem dados de exemplo)
+│   └── store.tsx           # estado global, sessão e persistência local
 └── types/
     └── index.ts            # tipos do domínio
 ```

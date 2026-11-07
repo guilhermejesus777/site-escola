@@ -68,3 +68,11 @@ export type DataState = {
   blocks: Block[];
   activities: Activity[];
 };
+
+export type UserRole = "professor" | "aluno";
+
+export type SessionUser = {
+  email: string;
+  name: string;
+  role: UserRole;
+};

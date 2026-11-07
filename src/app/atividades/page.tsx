@@ -39,7 +39,6 @@ import {
 } from "@/lib/date";
 import {
   CLASSES,
-  CURRENT_USER,
   KIND_LABEL,
   KIND_TONE,
   SUBJECTS,
@@ -70,7 +69,10 @@ function datesOf(activity: Activity): string[] {
 }
 
 export default function AtividadesPage() {
-  const { activities, addActivity, deleteActivity } = useStore();
+  const { activities, addActivity, deleteActivity, user } = useStore();
+
+  const isProfessor = user?.role === "professor";
+  const userName = user?.name ?? "";
 
   const [month, setMonth] = useState<Date>(() => {
     const now = new Date();
@@ -180,7 +182,7 @@ export default function AtividadesPage() {
       kind,
       classId,
       subject,
-      teacher: CURRENT_USER,
+      teacher: userName,
       examDate: examDate || undefined,
       dueDate: dueDate || examDate || undefined,
       description: description.trim(),
@@ -218,13 +220,17 @@ export default function AtividadesPage() {
             Provas e atividades
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Datas de provas, trabalhos e entregas de todas as turmas em um só lugar.
+            {isProfessor
+              ? "Publique provas, trabalhos e entregas das suas turmas."
+              : "Consulte as datas de provas, trabalhos e entregas de todas as turmas."}
           </p>
         </div>
-        <Button onClick={openForm}>
-          <IconPlus width={16} height={16} />
-          Nova atividade
-        </Button>
+        {isProfessor ? (
+          <Button onClick={openForm}>
+            <IconPlus width={16} height={16} />
+            Nova atividade
+          </Button>
+        ) : null}
       </div>
 
       {/* Filtros */}
@@ -412,10 +418,12 @@ export default function AtividadesPage() {
                 title="Nada marcado por aqui"
                 description="Quando um professor publicar uma prova ou entrega, ela aparece nesta lista."
                 action={
-                  <Button size="sm" onClick={openForm}>
-                    <IconPlus width={14} height={14} />
-                    Publicar atividade
-                  </Button>
+                  isProfessor ? (
+                    <Button size="sm" onClick={openForm}>
+                      <IconPlus width={14} height={14} />
+                      Publicar atividade
+                    </Button>
+                  ) : undefined
                 }
               />
             ) : (
@@ -466,10 +474,14 @@ export default function AtividadesPage() {
       </div>
 
       <p className="text-center text-[11px] text-slate-400 dark:text-slate-500">
-        Alunos veem apenas as atividades da própria turma.{" "}
-        <Link href="/configuracoes" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
-          Ver permissões
-        </Link>
+        {isProfessor ? "Você pode publicar e excluir as atividades que criar. " : ""}
+        {isProfessor ? (
+          <Link href="/configuracoes" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+            Ver permissões
+          </Link>
+        ) : (
+          "Apenas professores podem publicar ou excluir atividades."
+        )}
       </p>
 
       {/* Detalhe */}
@@ -480,7 +492,7 @@ export default function AtividadesPage() {
         description={detail ? `${classNameOf(detail.classId)} · ${detail.subject}` : undefined}
         footer={
           <>
-            {detail?.teacher === CURRENT_USER ? (
+            {isProfessor && detail?.teacher === userName ? (
               <Button variant="danger" onClick={handleDelete}>
                 <IconTrash width={15} height={15} />
                 Excluir

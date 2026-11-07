@@ -24,7 +24,6 @@ import {
 } from "@/lib/date";
 import {
   CLASSES,
-  CURRENT_USER,
   KIND_LABEL,
   KIND_TONE,
   SLOTS,
@@ -44,15 +43,20 @@ function daysUntil(dateISO: string): number {
 }
 
 export default function HomePage() {
-  const { reservations, activities, blocks, getReservation, getBlock } = useStore();
+  const { reservations, activities, blocks, getReservation, getBlock, user } = useStore();
   const today = todayISO();
   const monday = planningWeekStart();
+  const isProfessor = user?.role === "professor";
+  const userName = user?.name ?? "";
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
 
-  const myNext = reservations
-    .filter((item) => item.teacher === CURRENT_USER && item.date >= today)
+  const myNext = (isProfessor
+    ? reservations.filter((item) => item.teacher === userName)
+    : reservations
+  )
+    .filter((item) => item.date >= today)
     .sort((a, b) =>
       a.date === b.date
         ? a.slotId.localeCompare(b.slotId)
@@ -75,9 +79,9 @@ export default function HomePage() {
     )
     .slice(0, 4);
 
-  const myFuture = reservations.filter(
-    (item) => item.teacher === CURRENT_USER && item.date >= today,
-  ).length;
+  const myFuture = isProfessor
+    ? reservations.filter((item) => item.teacher === userName && item.date >= today).length
+    : reservations.filter((item) => item.date >= today).length;
   const deliveries7 = activities.filter((item) => {
     const date = item.dueDate ?? item.examDate;
     if (!date) return false;
@@ -104,7 +108,7 @@ export default function HomePage() {
 
   const stats = [
     {
-      label: "Minhas reservas",
+      label: isProfessor ? "Minhas reservas" : "Reservas",
       value: myFuture,
       hint: "próximas",
       icon: IconCalendar,
@@ -140,7 +144,7 @@ export default function HomePage() {
           {formatLongDate(today)}
         </p>
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          {greeting}, {CURRENT_USER.split(" ")[0]} 👋
+          {greeting}, {userName.split(" ")[0]} 👋
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Veja o que está acontecendo na escola e organize sua semana.
@@ -154,7 +158,7 @@ export default function HomePage() {
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-indigo-200">
-              Sua próxima reserva
+              {isProfessor ? "Sua próxima reserva" : "Próxima reserva da escola"}
             </p>
             {myNext ? (
               <>
@@ -178,7 +182,9 @@ export default function HomePage() {
               <>
                 <p className="mt-1 text-lg font-semibold">Nenhuma reserva futura</p>
                 <p className="mt-1 text-xs text-indigo-100">
-                  Que tal garantir o laboratório para a próxima aula?
+                  {isProfessor
+                    ? "Que tal garantir o laboratório para a próxima aula?"
+                    : "Quando os professores reservarem espaços, eles aparecem aqui."}
                 </p>
               </>
             )}
@@ -188,8 +194,17 @@ export default function HomePage() {
               href="/reservas"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-indigo-700 shadow-sm transition hover:bg-indigo-50"
             >
-              <IconPlus width={15} height={15} />
-              Reservar horário
+              {isProfessor ? (
+                <>
+                  <IconPlus width={15} height={15} />
+                  Reservar horário
+                </>
+              ) : (
+                <>
+                  <IconCalendar width={15} height={15} />
+                  Ver calendário
+                </>
+              )}
             </Link>
           </div>
         </div>
@@ -244,7 +259,7 @@ export default function HomePage() {
                 {upcomingReservations.map((item) => {
                   const space = SPACES.find((spaceItem) => spaceItem.id === item.spaceId);
                   const slot = SLOTS.find((slotItem) => slotItem.id === item.slotId);
-                  const mine = item.teacher === CURRENT_USER;
+                  const mine = isProfessor && item.teacher === userName;
                   return (
                     <li key={item.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
                       <div className="flex w-12 shrink-0 flex-col items-center rounded-lg bg-slate-50 px-1 py-1 dark:bg-slate-800/70">
@@ -384,7 +399,7 @@ export default function HomePage() {
               href="/reservas"
               className="mt-4 flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800"
             >
-              Gerenciar reservas
+              {isProfessor ? "Gerenciar reservas" : "Ver reservas"}
               <IconArrowRight width={13} height={13} />
             </Link>
           </section>
@@ -399,7 +414,7 @@ export default function HomePage() {
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
                   <IconCalendar width={14} height={14} />
                 </span>
-                Reservar o laboratório
+                {isProfessor ? "Reservar o laboratório" : "Ver calendário de reservas"}
                 <IconArrowRight width={13} height={13} className="ml-auto text-slate-300 dark:text-slate-600" />
               </Link>
               <Link
@@ -409,30 +424,32 @@ export default function HomePage() {
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300">
                   <IconBook width={14} height={14} />
                 </span>
-                Publicar atividade
+                {isProfessor ? "Publicar atividade" : "Ver provas e atividades"}
                 <IconArrowRight width={13} height={13} className="ml-auto text-slate-300 dark:text-slate-600" />
               </Link>
-              <Link
-                href="/configuracoes"
-                className="flex items-center gap-2.5 rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition hover:border-indigo-200 hover:bg-indigo-50/50 dark:hover:border-indigo-400/30 dark:hover:bg-indigo-500/10"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                  <IconClock width={14} height={14} />
-                </span>
-                Horários e regras
-                <IconArrowRight width={13} height={13} className="ml-auto text-slate-300 dark:text-slate-600" />
-              </Link>
+              {isProfessor ? (
+                <Link
+                  href="/configuracoes"
+                  className="flex items-center gap-2.5 rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition hover:border-indigo-200 hover:bg-indigo-50/50 dark:hover:border-indigo-400/30 dark:hover:bg-indigo-500/10"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                    <IconClock width={14} height={14} />
+                  </span>
+                  Horários e regras
+                  <IconArrowRight width={13} height={13} className="ml-auto text-slate-300 dark:text-slate-600" />
+                </Link>
+              ) : null}
             </div>
           </section>
 
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 dark:border-slate-700 dark:bg-slate-900/40 p-4">
             <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              Modo demonstração
+              Sessão de {isProfessor ? "professor" : "aluno"}
             </p>
             <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-              As reservas e atividades abaixo são fictícias e ficam salvas somente neste
-              navegador. Nada é enviado para a escola.
+              O app começa vazio. Tudo o que você criar fica salvo somente neste navegador —
+              nada é enviado para a escola.
             </p>
           </div>
         </div>
