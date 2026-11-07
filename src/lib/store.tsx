@@ -11,6 +11,7 @@ import {
 } from "react";
 import { createInitialData } from "@/lib/mock-data";
 import { todayISO, weekdayIndex } from "@/lib/date";
+import { isValidProfessorCode } from "@/lib/access";
 import { validateEmail } from "@/lib/email";
 import type {
   Activity,
@@ -29,7 +30,7 @@ type ActivityInput = Omit<Activity, "id" | "createdAt">;
 
 type StoreValue = DataState & {
   user: SessionUser | null;
-  login: (email: string, role: UserRole) => void;
+  login: (email: string, role: UserRole, code?: string) => boolean;
   logout: () => void;
   getReservation: (spaceId: string, date: string, slotId: string) => Reservation | undefined;
   getBlock: (spaceId: string, date: string, slotId: string) => Block | undefined;
@@ -118,9 +119,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [state, ready]);
 
-  const login = useCallback((email: string, role: UserRole) => {
+  const login = useCallback((email: string, role: UserRole, code = "") => {
     const result = validateEmail(email);
-    if (!result.ok) return;
+    if (!result.ok) return false;
+    if (role === "professor" && !isValidProfessorCode(code)) return false;
     const cleanEmail = result.email;
     const nextUser: SessionUser = {
       email: cleanEmail,
@@ -133,6 +135,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch {
       // Sem armazenamento: a sessão vale só para esta aba.
     }
+    return true;
   }, []);
 
   const logout = useCallback(() => {

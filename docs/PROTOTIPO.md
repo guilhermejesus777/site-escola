@@ -18,11 +18,11 @@ Acesse `http://localhost:3000` no computador ou no celular (mesma rede: use o en
 ### 1. Login (1 min)
 
 1. Na tela inicial, escolha **Sou professor**.
-2. Informe um e-mail da escola (ex.: `ana.souza@escola.pr.gov.br` ou `ana.souza@gmail.com`) e clique em **Entrar**. Só domínios conhecidos são aceitos — a própria tela lista os aceitos.
+2. Informe um e-mail da escola (ex.: `ana.souza@escola.pr.gov.br` ou `ana.souza@gmail.com`), digite o **código de acesso** da coordenação (no protótipo: `1234`) e clique em **Entrar**. Só domínios conhecidos são aceitos — a própria tela lista os aceitos.
 3. Mostre que o nome do perfil é criado a partir do e-mail (Ana Souza) e que a sessão continua ativa ao recarregar a página.
 4. No fim da demonstração, mostre o **Sair** e repita o login como **Sou aluno** para comparar as permissões.
 
-> Alunos enxergam o calendário e a agenda em modo somente leitura: não há botões de reservar, cancelar, publicar ou excluir, e Configurações fica oculta.
+> Alunos enxergam o calendário e a agenda em modo somente leitura: não há botões de reservar, cancelar, publicar ou excluir, e Configurações fica oculta. O perfil de professor exige o código da coordenação (demonstração: `1234`).
 
 ### 2. Painel inicial (30 s)
 
@@ -82,7 +82,7 @@ Acesse `http://localhost:3000` no computador ou no celular (mesma rede: use o en
 
 ## Limitações (dizer com transparência)
 
-- O login é simulado: não há senha nem validação no servidor — basta um e-mail válido e a escolha do perfil.
+- O login é simulado: não há senha nem validação no servidor — basta um e-mail válido e a escolha do perfil. O código de professor fica no código-fonte do protótipo, então não é segurança real.
 - O app começa vazio; nenhuma reserva ou atividade é criada automaticamente.
 - Os arquivos **não são enviados** de verdade.
 - As configurações da tela de configurações **não são salvas** (a limpeza dos dados funciona).
