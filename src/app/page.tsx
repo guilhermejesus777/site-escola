@@ -108,28 +108,28 @@ export default function HomePage() {
       value: myFuture,
       hint: "próximas",
       icon: IconCalendar,
-      tone: "bg-indigo-50 text-indigo-600",
+      tone: "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300",
     },
     {
       label: "Entregas",
       value: deliveries7,
       hint: "nos próximos 7 dias",
       icon: IconBook,
-      tone: "bg-amber-50 text-amber-600",
+      tone: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
     },
     {
       label: "Provas",
       value: exams30,
       hint: "nos próximos 30 dias",
       icon: IconSparkles,
-      tone: "bg-rose-50 text-rose-600",
+      tone: "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300",
     },
     {
       label: "Turmas",
       value: CLASSES.length,
       hint: "ativas no sistema",
       icon: IconUsers,
-      tone: "bg-emerald-50 text-emerald-600",
+      tone: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
     },
   ];
 
@@ -139,10 +139,10 @@ export default function HomePage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
           {formatLongDate(today)}
         </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           {greeting}, {CURRENT_USER.split(" ")[0]} 👋
         </h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Veja o que está acontecendo na escola e organize sua semana.
         </p>
       </header>
@@ -202,18 +202,18 @@ export default function HomePage() {
           return (
             <div
               key={stat.label}
-              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white p-4 shadow-sm dark:bg-slate-900"
             >
               <span
                 className={`flex h-9 w-9 items-center justify-center rounded-xl ${stat.tone}`}
               >
                 <Icon width={17} height={17} />
               </span>
-              <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+              <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {stat.value}
               </p>
-              <p className="text-[11px] font-medium text-slate-600">{stat.label}</p>
-              <p className="text-[10px] text-slate-400">{stat.hint}</p>
+              <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{stat.label}</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500">{stat.hint}</p>
             </div>
           );
         })}
@@ -236,7 +236,7 @@ export default function HomePage() {
             }
           >
             {upcomingReservations.length === 0 ? (
-              <p className="py-4 text-center text-xs text-slate-500">
+              <p className="py-4 text-center text-xs text-slate-500 dark:text-slate-400">
                 Nenhuma reserva futura registrada.
               </p>
             ) : (
@@ -247,21 +247,21 @@ export default function HomePage() {
                   const mine = item.teacher === CURRENT_USER;
                   return (
                     <li key={item.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <div className="flex w-12 shrink-0 flex-col items-center rounded-lg bg-slate-50 px-1 py-1">
-                        <span className="text-[9px] font-semibold uppercase text-slate-400">
+                      <div className="flex w-12 shrink-0 flex-col items-center rounded-lg bg-slate-50 px-1 py-1 dark:bg-slate-800/70">
+                        <span className="text-[9px] font-semibold uppercase text-slate-400 dark:text-slate-500">
                           {new Intl.DateTimeFormat("pt-BR", { month: "short" })
                             .format(fromISO(item.date))
                             .replace(".", "")}
                         </span>
-                        <span className="text-sm font-bold leading-tight text-slate-700">
+                        <span className="text-sm font-bold leading-tight text-slate-700 dark:text-slate-300">
                           {String(fromISO(item.date).getDate()).padStart(2, "0")}
                         </span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-semibold text-slate-900">
+                        <p className="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
                           {item.purpose}
                         </p>
-                        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-500">
+                        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-slate-500 dark:text-slate-400">
                           <span className="flex items-center gap-1">
                             <IconMapPin width={10} height={10} />
                             {space?.short}
@@ -297,7 +297,7 @@ export default function HomePage() {
             }
           >
             {upcomingActivities.length === 0 ? (
-              <p className="py-4 text-center text-xs text-slate-500">
+              <p className="py-4 text-center text-xs text-slate-500 dark:text-slate-400">
                 Nenhuma entrega marcada.
               </p>
             ) : (
@@ -306,7 +306,7 @@ export default function HomePage() {
                   const date = item.dueDate ?? item.examDate ?? "";
                   return (
                     <li key={item.id} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
-                      <div className="flex w-12 shrink-0 flex-col items-center rounded-lg bg-amber-50 px-1 py-1 text-amber-700">
+                      <div className="flex w-12 shrink-0 flex-col items-center rounded-lg bg-amber-50 px-1 py-1 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                         <span className="text-[9px] font-semibold uppercase">
                           {new Intl.DateTimeFormat("pt-BR", { month: "short" })
                             .format(fromISO(date))
@@ -321,14 +321,14 @@ export default function HomePage() {
                           <Badge tone={KIND_TONE[item.kind] as BadgeTone}>
                             {KIND_LABEL[item.kind]}
                           </Badge>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">
                             {relativeDay(date)}
                           </span>
                         </div>
-                        <p className="mt-0.5 truncate text-xs font-semibold text-slate-900">
+                        <p className="mt-0.5 truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
                           {item.title}
                         </p>
-                        <p className="text-[10px] text-slate-500">
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400">
                           {classNameOf(item.classId)} · {item.subject}
                         </p>
                       </div>
@@ -342,24 +342,24 @@ export default function HomePage() {
 
         {/* Coluna lateral */}
         <div className="space-y-5">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white p-5 shadow-sm dark:bg-slate-900">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">Laboratório de Informática</h2>
-                <p className="mt-0.5 text-[11px] text-slate-500">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Laboratório de Informática</h2>
+                <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                   Ocupação desta semana
                 </p>
               </div>
               <Badge tone={labPercent > 70 ? "amber" : "emerald"}>{labPercent}%</Badge>
             </div>
 
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
                 style={{ width: `${labPercent}%` }}
               />
             </div>
-            <p className="mt-2 text-[11px] text-slate-500">
+            <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
               {labUsed} de {labTotal} horários ocupados por reservas e bloqueios.
             </p>
 
@@ -372,9 +372,9 @@ export default function HomePage() {
                   0,
                 );
                 return (
-                  <div key={item.id} className="rounded-lg bg-slate-50 px-1.5 py-2">
+                  <div key={item.id} className="rounded-lg bg-slate-50 px-1.5 py-2 dark:bg-slate-800/70">
                     <p className="text-base font-semibold text-slate-800">{count}</p>
-                    <p className="truncate text-[9px] text-slate-500">{item.short}</p>
+                    <p className="truncate text-[9px] text-slate-500 dark:text-slate-400">{item.short}</p>
                   </div>
                 );
               })}
@@ -382,55 +382,55 @@ export default function HomePage() {
 
             <Link
               href="/reservas"
-              className="mt-4 flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="mt-4 flex h-9 items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               Gerenciar reservas
               <IconArrowRight width={13} height={13} />
             </Link>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-slate-900">Acesso rápido</h2>
+          <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white p-5 shadow-sm dark:bg-slate-900">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Acesso rápido</h2>
             <div className="mt-3 space-y-2">
               <Link
                 href="/reservas"
-                className="flex items-center gap-2.5 rounded-xl border border-slate-100 px-3 py-2.5 text-xs font-medium text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50/50"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition hover:border-indigo-200 hover:bg-indigo-50/50 dark:hover:border-indigo-400/30 dark:hover:bg-indigo-500/10"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
                   <IconCalendar width={14} height={14} />
                 </span>
                 Reservar o laboratório
-                <IconArrowRight width={13} height={13} className="ml-auto text-slate-300" />
+                <IconArrowRight width={13} height={13} className="ml-auto text-slate-300 dark:text-slate-600" />
               </Link>
               <Link
                 href="/atividades"
-                className="flex items-center gap-2.5 rounded-xl border border-slate-100 px-3 py-2.5 text-xs font-medium text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50/50"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition hover:border-indigo-200 hover:bg-indigo-50/50 dark:hover:border-indigo-400/30 dark:hover:bg-indigo-500/10"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300">
                   <IconBook width={14} height={14} />
                 </span>
                 Publicar atividade
-                <IconArrowRight width={13} height={13} className="ml-auto text-slate-300" />
+                <IconArrowRight width={13} height={13} className="ml-auto text-slate-300 dark:text-slate-600" />
               </Link>
               <Link
                 href="/configuracoes"
-                className="flex items-center gap-2.5 rounded-xl border border-slate-100 px-3 py-2.5 text-xs font-medium text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50/50"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 transition hover:border-indigo-200 hover:bg-indigo-50/50 dark:hover:border-indigo-400/30 dark:hover:bg-indigo-500/10"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                   <IconClock width={14} height={14} />
                 </span>
                 Horários e regras
-                <IconArrowRight width={13} height={13} className="ml-auto text-slate-300" />
+                <IconArrowRight width={13} height={13} className="ml-auto text-slate-300 dark:text-slate-600" />
               </Link>
             </div>
           </section>
 
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4">
-            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700">
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 dark:border-slate-700 dark:bg-slate-900/40 p-4">
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
               Modo demonstração
             </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
               As reservas e atividades abaixo são fictícias e ficam salvas somente neste
               navegador. Nada é enviado para a escola.
             </p>
@@ -438,7 +438,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <p className="pb-2 text-center text-[11px] text-slate-400">
+      <p className="pb-2 text-center text-[11px] text-slate-400 dark:text-slate-500">
         {blocks.length} bloqueios ativos · {reservations.length} reservas · {activities.length}{" "}
         atividades cadastradas
       </p>

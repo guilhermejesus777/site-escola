@@ -52,6 +52,7 @@ npm start       # serve o build
 - Cancelamento das próprias reservas.
 - Publicação de provas/atividades com data da prova, prazo de entrega e anexos (nome e tamanho).
 - Filtro por turma, calendário mensal com marcadores e detalhe da atividade.
+- **Modo escuro** com botão de alternância (claro/escuro), aplicado ao calendário, às turmas e a todas as telas; a escolha fica salva no navegador.
 - Persistência local no navegador (`localStorage`), então as alterações sobrevivem ao recarregar.
 - Layout responsivo: barra lateral no computador, navegação inferior no celular.
 

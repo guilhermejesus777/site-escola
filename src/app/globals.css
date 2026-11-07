@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
@@ -18,6 +20,11 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.dark body {
+  background-color: #020617;
+  color: #e2e8f0;
+}
+
 /* Rolagem horizontal do calendário sem barra visual pesada */
 .calendar-scroll {
   scrollbar-width: thin;
@@ -33,12 +40,26 @@ body {
   border-radius: 9999px;
 }
 
+.dark .calendar-scroll::-webkit-scrollbar-thumb {
+  background-color: #334155;
+}
+
 /* Faixa diagonal para horários bloqueados */
 .blocked-stripes {
   background-image: repeating-linear-gradient(
     -45deg,
     rgba(148, 163, 184, 0.12) 0,
     rgba(148, 163, 184, 0.12) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+.dark .blocked-stripes {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(148, 163, 184, 0.16) 0,
+    rgba(148, 163, 184, 0.16) 6px,
     transparent 6px,
     transparent 12px
   );

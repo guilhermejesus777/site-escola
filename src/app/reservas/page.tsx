@@ -48,15 +48,15 @@ const SPACE_ICONS = {
 } as const;
 
 const SPACE_ACTIVE: Record<Space["tone"], string> = {
-  indigo: "border-indigo-200 bg-indigo-50 text-indigo-700",
-  sky: "border-sky-200 bg-sky-50 text-sky-700",
-  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  indigo: "border-indigo-200 dark:border-indigo-400/30 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300",
+  sky: "border-sky-200 dark:border-sky-400/30 bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300",
+  emerald: "border-emerald-200 dark:border-emerald-400/30 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
 };
 
 const SPACE_SOFT: Record<Space["tone"], string> = {
-  indigo: "bg-indigo-50 text-indigo-600",
-  sky: "bg-sky-50 text-sky-600",
-  emerald: "bg-emerald-50 text-emerald-600",
+  indigo: "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400",
+  sky: "bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  emerald: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
 };
 
 function slotOrder(slotId: string): number {
@@ -184,13 +184,13 @@ export default function ReservasPage() {
       {/* Cabeçalho */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
             Calendário de reservas
           </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             Reservas de espaços
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Escolha um horário livre e reserve na hora, sem conflito de agendas.
           </p>
         </div>
@@ -213,12 +213,12 @@ export default function ReservasPage() {
               className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-left transition ${
                 active
                   ? `${SPACE_ACTIVE[item.tone]} shadow-sm`
-                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
               }`}
             >
               <span
                 className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                  active ? "bg-white/70" : SPACE_SOFT[item.tone]
+                  active ? "bg-white/70 dark:bg-indigo-500/20" : SPACE_SOFT[item.tone]
                 }`}
               >
                 <Icon width={18} height={18} />
@@ -235,14 +235,14 @@ export default function ReservasPage() {
       </div>
 
       {/* Calendário */}
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white shadow-sm dark:bg-slate-900">
+        <div className="flex flex-col gap-3 border-b border-slate-100 dark:border-slate-800 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="flex items-center gap-2">
-            <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white shadow-sm dark:bg-slate-900">
               <button
                 type="button"
                 onClick={() => setWeekStart((current) => addDays(current, -7))}
-                className="rounded-l-xl px-2.5 py-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+                className="rounded-l-xl px-2.5 py-2 text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-100"
                 aria-label="Semana anterior"
               >
                 <IconChevronLeft width={18} height={18} />
@@ -250,47 +250,47 @@ export default function ReservasPage() {
               <button
                 type="button"
                 onClick={() => setWeekStart(planningWeekStart())}
-                className="border-x border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+                className="border-x border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 Semana atual
               </button>
               <button
                 type="button"
                 onClick={() => setWeekStart((current) => addDays(current, 7))}
-                className="rounded-r-xl px-2.5 py-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+                className="rounded-r-xl px-2.5 py-2 text-slate-500 dark:text-slate-400 transition hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-100"
                 aria-label="Próxima semana"
               >
                 <IconChevronRight width={18} height={18} />
               </button>
             </div>
             <div className="leading-tight">
-              <p className="text-sm font-semibold text-slate-900">{formatWeekTitle(weekStart)}</p>
-              <p className="text-[11px] text-slate-500">{space.name}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{formatWeekTitle(weekStart)}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{space.name}</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm border border-slate-300 bg-white" />
+              <span className="h-2.5 w-2.5 rounded-sm border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-900" />
               Livre
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm border border-indigo-300 bg-indigo-100" />
+              <span className="h-2.5 w-2.5 rounded-sm border border-indigo-300 bg-indigo-100 dark:border-indigo-400/40 dark:bg-indigo-500/25" />
               Sua reserva
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm border border-slate-300 bg-slate-100" />
+              <span className="h-2.5 w-2.5 rounded-sm border border-slate-300 bg-slate-100 dark:border-slate-600 dark:bg-slate-800" />
               Reservado
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="blocked-stripes h-2.5 w-2.5 rounded-sm border border-slate-300 bg-slate-100" />
+              <span className="blocked-stripes h-2.5 w-2.5 rounded-sm border border-slate-300 bg-slate-100 dark:border-slate-600 dark:bg-slate-800" />
               Bloqueado
             </span>
           </div>
         </div>
 
         <div className="calendar-scroll overflow-x-auto">
-          <p className="px-4 pt-2 text-[10px] text-slate-400 sm:hidden">
+          <p className="px-4 pt-2 text-[10px] text-slate-400 dark:text-slate-500 sm:hidden">
             Deslize o calendário para o lado para ver todos os dias.
           </p>
           <div className="min-w-[820px] p-3 sm:p-4">
@@ -307,7 +307,7 @@ export default function ReservasPage() {
                   <div
                     key={iso}
                     className={`rounded-lg px-2 py-1.5 text-center ${
-                      isToday ? "bg-indigo-600 text-white" : "bg-slate-50 text-slate-600"
+                      isToday ? "bg-indigo-600 text-white" : "bg-slate-50 dark:bg-slate-800/70 text-slate-600 dark:text-slate-300"
                     }`}
                   >
                     <p className="text-[10px] font-medium uppercase tracking-wide opacity-80">
@@ -330,9 +330,9 @@ export default function ReservasPage() {
                   className="grid gap-1.5"
                   style={{ gridTemplateColumns: "78px repeat(5, minmax(0, 1fr))" }}
                 >
-                  <div className="flex flex-col justify-center rounded-lg bg-slate-50 px-2 py-1.5">
-                    <span className="text-[11px] font-semibold text-slate-700">{slot.label}</span>
-                    <span className="text-[10px] text-slate-400">
+                  <div className="flex flex-col justify-center rounded-lg bg-slate-50 dark:bg-slate-800/70 px-2 py-1.5">
+                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">{slot.label}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
                       {slot.start}–{slot.end}
                     </span>
                   </div>
@@ -349,27 +349,27 @@ export default function ReservasPage() {
                           key={date}
                           className={`min-h-[70px] rounded-lg border px-2 py-1.5 ${
                             mine
-                              ? "border-indigo-200 bg-indigo-50"
-                              : "border-slate-200 bg-slate-50"
+                              ? "border-indigo-200 dark:border-indigo-400/30 bg-indigo-50 dark:bg-indigo-500/15"
+                              : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70"
                           } ${past ? "opacity-50" : ""}`}
                           title={`${reservation.purpose} — ${reservation.teacher} (${classNameOf(reservation.classId)})`}
                         >
                           <p
                             className={`line-clamp-2 text-[11px] font-semibold leading-snug ${
-                              mine ? "text-indigo-900" : "text-slate-700"
+                              mine ? "text-indigo-900 dark:text-indigo-200" : "text-slate-700 dark:text-slate-300"
                             }`}
                           >
                             {reservation.purpose}
                           </p>
                           <p
                             className={`mt-1 truncate text-[10px] ${
-                              mine ? "text-indigo-600" : "text-slate-500"
+                              mine ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 dark:text-slate-400"
                             }`}
                           >
                             {classNameOf(reservation.classId)} · {reservation.teacher.split(" ")[0]}
                           </p>
                           {mine ? (
-                            <span className="mt-1 inline-flex items-center gap-0.5 text-[9px] font-semibold uppercase tracking-wide text-indigo-500">
+                            <span className="mt-1 inline-flex items-center gap-0.5 text-[9px] font-semibold uppercase tracking-wide text-indigo-500 dark:text-indigo-400">
                               <IconCheck width={9} height={9} /> sua
                             </span>
                           ) : null}
@@ -381,13 +381,13 @@ export default function ReservasPage() {
                       return (
                         <div
                           key={date}
-                          className="blocked-stripes min-h-[70px] rounded-lg border border-slate-200 bg-slate-100/70 px-2 py-1.5"
+                          className="blocked-stripes min-h-[70px] rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100/70 dark:bg-slate-800/40 px-2 py-1.5"
                           title={`Bloqueado: ${block.reason}`}
                         >
-                          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                             Bloqueado
                           </p>
-                          <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-slate-500">
+                          <p className="mt-0.5 line-clamp-2 text-[10px] leading-snug text-slate-500 dark:text-slate-400">
                             {block.reason}
                           </p>
                         </div>
@@ -400,10 +400,10 @@ export default function ReservasPage() {
                         type="button"
                         disabled={past}
                         onClick={() => openBooking(date, slot.id)}
-                        className={`group flex min-h-[70px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white px-2 py-1.5 text-slate-400 transition ${
+                        className={`group flex min-h-[70px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 px-2 py-1.5 text-slate-400 dark:text-slate-500 transition ${
                           past
                             ? "cursor-not-allowed opacity-40"
-                            : "hover:border-indigo-300 hover:bg-indigo-50/60 hover:text-indigo-600"
+                            : "hover:border-indigo-300 hover:bg-indigo-50/60 dark:hover:border-indigo-400/50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-300"
                         }`}
                         aria-label={`Reservar ${space.name} em ${formatDateBR(date)} às ${slot.start}`}
                       >
@@ -422,36 +422,36 @@ export default function ReservasPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <p className="flex items-center gap-1.5 text-[11px] text-slate-500">
+        <div className="flex flex-col gap-2 border-t border-slate-100 dark:border-slate-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <p className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
             <IconClock width={13} height={13} />
             {occupancy.used} de {occupancy.total} horários ocupados nesta semana
           </p>
           <div className="flex items-center gap-2">
-            <div className="h-1.5 w-32 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-1.5 w-32 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
               <div
                 className="h-full rounded-full bg-indigo-500 transition-all"
                 style={{ width: `${occupancy.percent}%` }}
               />
             </div>
-            <span className="text-[11px] font-semibold text-slate-600">{occupancy.percent}%</span>
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">{occupancy.percent}%</span>
           </div>
         </div>
       </section>
 
       {/* Minhas reservas */}
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white shadow-sm dark:bg-slate-900">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Minhas próximas reservas</h2>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Minhas próximas reservas</h2>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               Cancelamentos até 2 horas antes do horário.
             </p>
           </div>
           <Badge tone="indigo">{myReservations.length}</Badge>
         </div>
 
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
           {myReservations.length === 0 ? (
             <div className="p-5">
               <EmptyState
@@ -470,7 +470,7 @@ export default function ReservasPage() {
                   className="flex flex-col gap-3 px-5 py-3.5 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex w-14 shrink-0 flex-col items-center rounded-xl bg-indigo-50 px-2 py-1.5 text-indigo-700">
+                    <div className="flex w-14 shrink-0 flex-col items-center rounded-xl bg-indigo-50 dark:bg-indigo-500/15 px-2 py-1.5 text-indigo-700 dark:text-indigo-300">
                       <span className="text-[10px] font-semibold uppercase">
                         {WEEKDAY_SHORT[fromISO(item.date).getDay()]}
                       </span>
@@ -484,8 +484,8 @@ export default function ReservasPage() {
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{item.purpose}</p>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{item.purpose}</p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
                         <span className="flex items-center gap-1">
                           <IconMapPin width={12} height={12} />
                           {itemSpace?.short}
@@ -501,14 +501,14 @@ export default function ReservasPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 pl-[4.25rem] sm:pl-0">
-                    <span className="text-[11px] font-medium text-slate-400">
+                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
                       {relativeDay(item.date)}
                     </span>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCancel(item.id, item.purpose)}
-                      className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                      className="text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
                     >
                       <IconTrash width={13} height={13} />
                       Cancelar
@@ -544,13 +544,13 @@ export default function ReservasPage() {
         }
       >
         <div className="space-y-4">
-          <div className="flex items-start gap-3 rounded-xl border border-indigo-100 bg-indigo-50/70 px-3.5 py-3">
-            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-sm">
+          <div className="flex items-start gap-3 rounded-xl border border-indigo-100 dark:border-indigo-400/30 bg-indigo-50 dark:bg-indigo-500/15 px-3.5 py-3">
+            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm">
               <SpaceIcon width={15} height={15} />
             </span>
             <div>
-              <p className="text-xs font-semibold text-indigo-900">{space.name}</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-indigo-700">
+              <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-200">{space.name}</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-indigo-700 dark:text-indigo-300">
                 Reserva imediata: assim que confirmar, o horário fica indisponível para os outros
                 professores.
               </p>

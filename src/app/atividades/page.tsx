@@ -211,13 +211,13 @@ export default function AtividadesPage() {
       {/* Cabeçalho */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
+          <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
             Agenda pedagógica
           </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             Provas e atividades
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Datas de provas, trabalhos e entregas de todas as turmas em um só lugar.
           </p>
         </div>
@@ -234,8 +234,8 @@ export default function AtividadesPage() {
           onClick={() => setClassFilter("all")}
           className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
             classFilter === "all"
-              ? "bg-slate-900 text-white"
-              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+              : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
           }`}
         >
           Todas as turmas
@@ -247,14 +247,14 @@ export default function AtividadesPage() {
             onClick={() => setClassFilter(item.id)}
             className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               classFilter === item.id
-                ? "bg-indigo-600 text-white"
-                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                ? "bg-indigo-600 text-white dark:bg-indigo-500"
+                : "border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
             }`}
           >
             {item.name}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-3 text-[11px] text-slate-500">
+        <div className="ml-auto flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400">
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-rose-500" /> Provas: {counts.provas}
           </span>
@@ -266,24 +266,24 @@ export default function AtividadesPage() {
 
       <div className="grid gap-5 xl:grid-cols-2">
         {/* Calendário */}
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5">
+        <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white shadow-sm dark:bg-slate-900">
+          <header className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-3.5">
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setMonth((current) => addMonths(current, -1))}
-                className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                className="rounded-lg p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-100"
                 aria-label="Mês anterior"
               >
                 <IconChevronLeft width={18} height={18} />
               </button>
-              <p className="min-w-[9rem] text-center text-sm font-semibold text-slate-900">
+              <p className="min-w-[9rem] text-center text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {formatMonthTitle(month)}
               </p>
               <button
                 type="button"
                 onClick={() => setMonth((current) => addMonths(current, 1))}
-                className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                className="rounded-lg p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-100"
                 aria-label="Próximo mês"
               >
                 <IconChevronRight width={18} height={18} />
@@ -307,7 +307,7 @@ export default function AtividadesPage() {
               {["dom", "seg", "ter", "qua", "qui", "sex", "sáb"].map((label) => (
                 <span
                   key={label}
-                  className="pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400"
+                  className="pb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500"
                 >
                   {label}
                 </span>
@@ -327,10 +327,10 @@ export default function AtividadesPage() {
                       selected
                         ? "bg-indigo-600 font-semibold text-white shadow-sm"
                         : isToday
-                          ? "bg-indigo-50 font-semibold text-indigo-700 hover:bg-indigo-100"
+                          ? "bg-indigo-50 dark:bg-indigo-500/15 font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-500/25"
                           : inMonth
-                            ? "text-slate-700 hover:bg-slate-100"
-                            : "text-slate-300 hover:bg-slate-50"
+                            ? "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            : "text-slate-300 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
                     }`}
                     aria-label={`Ver atividades de ${formatDateBR(iso)}`}
                   >
@@ -351,9 +351,9 @@ export default function AtividadesPage() {
             </div>
           </div>
 
-          <div className="border-t border-slate-100 px-5 py-3.5">
+          <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-3.5">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold text-slate-800">
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">
                 {formatLongDate(selectedDay)}
               </p>
               <Badge tone={dayActivities.length ? "indigo" : "slate"}>
@@ -361,7 +361,7 @@ export default function AtividadesPage() {
               </Badge>
             </div>
             {dayActivities.length === 0 ? (
-              <p className="rounded-lg bg-slate-50 px-3 py-2.5 text-[11px] text-slate-500">
+              <p className="rounded-lg bg-slate-50 dark:bg-slate-800/70 px-3 py-2.5 text-[11px] text-slate-500 dark:text-slate-400">
                 Nenhuma prova ou entrega marcada para este dia.
               </p>
             ) : (
@@ -371,20 +371,20 @@ export default function AtividadesPage() {
                     <button
                       type="button"
                       onClick={() => openDetail(item.id)}
-                      className="flex w-full items-center gap-2 rounded-lg border border-slate-100 px-2.5 py-2 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50"
+                      className="flex w-full items-center gap-2 rounded-lg border border-slate-100 dark:border-slate-800 px-2.5 py-2 text-left transition hover:border-indigo-200 dark:hover:border-indigo-400/30 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10"
                     >
                       <span
                         className={`h-2 w-2 shrink-0 rounded-full ${KIND_DOT[item.kind]}`}
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[11px] font-semibold text-slate-800">
+                        <span className="block truncate text-[11px] font-semibold text-slate-800 dark:text-slate-100">
                           {item.title}
                         </span>
-                        <span className="block text-[10px] text-slate-500">
+                        <span className="block text-[10px] text-slate-500 dark:text-slate-400">
                           {classNameOf(item.classId)} · {item.subject}
                         </span>
                       </span>
-                      <IconChevronRight width={14} height={14} className="text-slate-300" />
+                      <IconChevronRight width={14} height={14} className="text-slate-300 dark:text-slate-600" />
                     </button>
                   </li>
                 ))}
@@ -394,11 +394,11 @@ export default function AtividadesPage() {
         </section>
 
         {/* Próximas entregas */}
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3.5">
+        <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white shadow-sm dark:bg-slate-900">
+          <header className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-3.5">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">Próximas entregas</h2>
-              <p className="mt-0.5 text-[11px] text-slate-500">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Próximas entregas</h2>
+              <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                 Prova e trabalhos ordenados por data
               </p>
             </div>
@@ -424,29 +424,29 @@ export default function AtividadesPage() {
                   key={item.id}
                   type="button"
                   onClick={() => openDetail(item.id)}
-                  className="flex w-full items-start gap-3 rounded-xl border border-slate-100 p-3 text-left transition hover:border-indigo-200 hover:bg-indigo-50/40"
+                  className="flex w-full items-start gap-3 rounded-xl border border-slate-100 dark:border-slate-800 p-3 text-left transition hover:border-indigo-200 dark:hover:border-indigo-400/30 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10"
                 >
-                  <div className="flex w-12 shrink-0 flex-col items-center rounded-lg bg-slate-50 px-1 py-1.5">
-                    <span className="text-[9px] font-semibold uppercase text-slate-400">
+                  <div className="flex w-12 shrink-0 flex-col items-center rounded-lg bg-slate-50 dark:bg-slate-800/70 px-1 py-1.5">
+                    <span className="text-[9px] font-semibold uppercase text-slate-400 dark:text-slate-500">
                       {new Intl.DateTimeFormat("pt-BR", { month: "short" })
                         .format(fromISO(activityDate(item)))
                         .replace(".", "")}
                     </span>
-                    <span className="text-base font-bold leading-tight text-slate-800">
+                    <span className="text-base font-bold leading-tight text-slate-800 dark:text-slate-100">
                       {String(fromISO(activityDate(item)).getDate()).padStart(2, "0")}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <Badge tone={KIND_TONE[item.kind] as BadgeTone}>{KIND_LABEL[item.kind]}</Badge>
-                      <span className="text-[10px] font-medium text-slate-400">
+                      <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
                         {relativeDay(activityDate(item))}
                       </span>
                     </div>
-                    <p className="mt-1 truncate text-xs font-semibold text-slate-900">
+                    <p className="mt-1 truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
                       {item.title}
                     </p>
-                    <p className="mt-0.5 flex items-center gap-2 text-[10px] text-slate-500">
+                    <p className="mt-0.5 flex items-center gap-2 text-[10px] text-slate-500 dark:text-slate-400">
                       <span>{classNameOf(item.classId)}</span>
                       <span>·</span>
                       <span>{item.subject}</span>
@@ -465,9 +465,9 @@ export default function AtividadesPage() {
         </section>
       </div>
 
-      <p className="text-center text-[11px] text-slate-400">
+      <p className="text-center text-[11px] text-slate-400 dark:text-slate-500">
         Alunos veem apenas as atividades da própria turma.{" "}
-        <Link href="/configuracoes" className="font-medium text-indigo-600 hover:underline">
+        <Link href="/configuracoes" className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
           Ver permissões
         </Link>
       </p>
@@ -503,66 +503,66 @@ export default function AtividadesPage() {
               <Badge tone="slate">{detail.subject}</Badge>
             </div>
 
-            <div className="grid gap-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3 sm:grid-cols-2">
+            <div className="grid gap-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/70/70 dark:bg-slate-800/50 p-3 sm:grid-cols-2">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                   Data da prova
                 </p>
-                <p className="mt-0.5 text-xs font-medium text-slate-800">
+                <p className="mt-0.5 text-xs font-medium text-slate-800 dark:text-slate-100">
                   {detail.examDate ? formatDateBR(detail.examDate) : "Não se aplica"}
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                   Prazo de entrega
                 </p>
-                <p className="mt-0.5 text-xs font-medium text-slate-800">
+                <p className="mt-0.5 text-xs font-medium text-slate-800 dark:text-slate-100">
                   {detail.dueDate ? formatDateBR(detail.dueDate) : "Não se aplica"}
                 </p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                   Professor(a)
                 </p>
-                <p className="mt-0.5 text-xs font-medium text-slate-800">{detail.teacher}</p>
+                <p className="mt-0.5 text-xs font-medium text-slate-800 dark:text-slate-100">{detail.teacher}</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                   Publicado em
                 </p>
-                <p className="mt-0.5 text-xs font-medium text-slate-800">
+                <p className="mt-0.5 text-xs font-medium text-slate-800 dark:text-slate-100">
                   {formatDateBR(detail.createdAt.slice(0, 10))}
                 </p>
               </div>
             </div>
 
             <div>
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                 Orientações
               </p>
-              <p className="whitespace-pre-line text-xs leading-relaxed text-slate-700">
+              <p className="whitespace-pre-line text-xs leading-relaxed text-slate-700 dark:text-slate-300">
                 {detail.description || "Sem orientações adicionais."}
               </p>
             </div>
 
             <div>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                 Anexos
               </p>
               {detail.attachments.length === 0 ? (
-                <p className="text-xs text-slate-400">Nenhum arquivo anexado.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">Nenhum arquivo anexado.</p>
               ) : (
                 <ul className="space-y-1.5">
                   {detail.attachments.map((file) => (
                     <li
                       key={file.name}
-                      className="flex items-center gap-2 rounded-lg border border-slate-100 px-2.5 py-2"
+                      className="flex items-center gap-2 rounded-lg border border-slate-100 dark:border-slate-800 px-2.5 py-2"
                     >
-                      <IconPaperclip width={14} height={14} className="text-slate-400" />
-                      <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-slate-700">
+                      <IconPaperclip width={14} height={14} className="text-slate-400 dark:text-slate-500" />
+                      <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-slate-700 dark:text-slate-300">
                         {file.name}
                       </span>
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">
                         {formatFileSize(file.size)}
                       </span>
                       <button
@@ -573,7 +573,7 @@ export default function AtividadesPage() {
                             tone: "error",
                           })
                         }
-                        className="rounded p-1 text-slate-400 transition hover:bg-slate-100 hover:text-indigo-600"
+                        className="rounded p-1 text-slate-400 dark:text-slate-500 transition hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-300"
                         aria-label={`Baixar ${file.name}`}
                       >
                         <IconDownload width={14} height={14} />
@@ -684,23 +684,23 @@ export default function AtividadesPage() {
           </Field>
 
           <Field label="Anexos" hint="PDF, DOCX, imagens ou links. Neste protótipo os arquivos não são enviados de verdade.">
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-3 py-3">
+            <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70/70 dark:bg-slate-800/50 px-3 py-3">
               <input
                 type="file"
                 multiple
                 onChange={(event) => handleFiles(event.target.files)}
-                className="block w-full text-xs text-slate-500 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-700"
+                className="block w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-700"
               />
               {attachments.length > 0 ? (
                 <ul className="mt-2 space-y-1">
                   {attachments.map((file, index) => (
                     <li
                       key={`${file.name}-${index}`}
-                      className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 text-[11px] text-slate-600 shadow-sm"
+                      className="flex items-center gap-2 rounded-lg bg-white px-2.5 dark:bg-slate-800 py-1.5 text-[11px] text-slate-600 dark:text-slate-300 shadow-sm"
                     >
-                      <IconPaperclip width={12} height={12} className="text-slate-400" />
+                      <IconPaperclip width={12} height={12} className="text-slate-400 dark:text-slate-500" />
                       <span className="min-w-0 flex-1 truncate">{file.name}</span>
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">
                         {formatFileSize(file.size)}
                       </span>
                       <button
@@ -710,7 +710,7 @@ export default function AtividadesPage() {
                             current.filter((_, itemIndex) => itemIndex !== index),
                           )
                         }
-                        className="rounded p-0.5 text-slate-400 hover:text-rose-600"
+                        className="rounded p-0.5 text-slate-400 dark:text-slate-500 hover:text-rose-600"
                         aria-label={`Remover ${file.name}`}
                       >
                         <IconTrash width={12} height={12} />

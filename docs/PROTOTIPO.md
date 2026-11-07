@@ -54,9 +54,10 @@ Acesse `http://localhost:3000` no computador ou no celular (mesma rede: use o en
    - a lista **Próximas entregas**;
    - o detalhe com orientações e anexos.
 
-### 6. Filtro por turma e permissões (1 min)
+### 6. Filtro por turma, permissões e tema (1 min)
 
 - Filtre por “7º ano A” e mostre que a agenda muda.
+- Use o botão de **sol/lua** no topo para alternar entre modo claro e escuro; mostre que o calendário e as turmas acompanham o tema e que a escolha permanece ao recarregar.
 - Abra **Configurações** e mostre a prévia do painel da coordenação: espaços, grade de horários, regras e permissões.
 - Explique que **alunos só veem a própria turma** e que **reservas são automáticas** (a coordenação pode bloquear horários).
 
