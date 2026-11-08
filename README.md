@@ -5,7 +5,9 @@ App web para a escola resolver dois problemas em um só lugar:
 1. **Reservas de espaços** — calendário digital para reservar o laboratório de informática (e outros espaços) sem conflito de horários.
 2. **Provas e atividades** — agenda de provas, trabalhos e entregas com anexos, organizada por turma.
 
-> **Status:** protótipo navegável com login simulado e app começando vazio. O próximo passo é conectar um banco de dados e autenticação reais.
+> **Status:** protótipo completo, publicado e com banco de dados PostgreSQL integrado.
+>
+> 🔗 **Site publicado:** <https://site-escola-1nmy.onrender.com> (plano gratuito do Render: o servidor "dorme" após inatividade e a primeira visita pode demorar até ~50 s)
 >
 > Planejamento completo: [`PLANEJAMENTO.md`](./PLANEJAMENTO.md) · Roteiro de demonstração: [`docs/PROTOTIPO.md`](./docs/PROTOTIPO.md)
 
