@@ -21,6 +21,7 @@ import {
   Field,
   Modal,
   Toast,
+  ConfirmDialog,
   inputClass,
   type BadgeTone,
 } from "@/components/ui";
@@ -89,6 +90,7 @@ export default function AtividadesPage() {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [title, setTitle] = useState("");
   const [kind, setKind] = useState<ActivityKind>("prova");
@@ -197,11 +199,15 @@ export default function AtividadesPage() {
 
   function handleDelete() {
     if (!detail) return;
-    if (window.confirm(`Excluir "${detail.title}"? Esta ação não pode ser desfeita.`)) {
-      deleteActivity(detail.id);
-      setDetailId(null);
-      setToast({ message: "Atividade excluída.", tone: "success" });
-    }
+    setConfirmDelete(true);
+  }
+
+  function confirmDeleteActivity() {
+    if (!detail) return;
+    deleteActivity(detail.id);
+    setConfirmDelete(false);
+    setDetailId(null);
+    setToast({ message: "Atividade excluída.", tone: "success" });
   }
 
   function openDetail(id: string) {
@@ -744,6 +750,19 @@ export default function AtividadesPage() {
       </Modal>
 
       <Toast message={toast?.message ?? null} tone={toast?.tone} onClose={closeToast} />
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={confirmDeleteActivity}
+        title="Excluir atividade?"
+        description={
+          detail
+            ? `"${detail.title}" será apagada do banco de dados e desaparecerá da agenda das turmas. Essa ação não pode ser desfeita.`
+            : ""
+        }
+        confirmLabel="Sim, excluir"
+      />
     </div>
   );
 }

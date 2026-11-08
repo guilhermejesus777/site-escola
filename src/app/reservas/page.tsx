@@ -22,6 +22,7 @@ import {
   Field,
   Modal,
   Toast,
+  ConfirmDialog,
   inputClass,
 } from "@/components/ui";
 import {
@@ -88,6 +89,7 @@ export default function ReservasPage() {
   const [purpose, setPurpose] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: "success" | "error" } | null>(null);
+  const [pendingCancel, setPendingCancel] = useState<{ id: string; label: string } | null>(null);
 
   const closeToast = useCallback(() => setToast(null), []);
 
@@ -178,10 +180,7 @@ export default function ReservasPage() {
   }
 
   function handleCancel(id: string, label: string) {
-    if (window.confirm(`Cancelar a reserva de ${label}?`)) {
-      cancelReservation(id);
-      setToast({ message: "Reserva cancelada. O horário voltou a ficar livre.", tone: "success" });
-    }
+    setPendingCancel({ id, label });
   }
 
   const selectedSlot = selected ? SLOTS.find((item) => item.id === selected.slotId) : null;
@@ -638,6 +637,23 @@ export default function ReservasPage() {
         message={toast?.message ?? null}
         tone={toast?.tone}
         onClose={closeToast}
+      />
+
+      <ConfirmDialog
+        open={!!pendingCancel}
+        onClose={() => setPendingCancel(null)}
+        onConfirm={() => {
+          if (pendingCancel) cancelReservation(pendingCancel.id);
+          setPendingCancel(null);
+          setToast({ message: "Reserva cancelada. O horário voltou a ficar livre.", tone: "success" });
+        }}
+        title="Cancelar esta reserva?"
+        description={
+          pendingCancel
+            ? `A reserva "${pendingCancel.label}" será apagada e o horário voltará a ficar livre para outro professor. Essa ação não pode ser desfeita.`
+            : ""
+        }
+        confirmLabel="Sim, cancelar reserva"
       />
     </div>
   );

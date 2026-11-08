@@ -15,7 +15,7 @@ import {
   IconVideo,
   IconX,
 } from "@/components/icons";
-import { Badge, Button, Toast } from "@/components/ui";
+import { Badge, Button, ConfirmDialog, Toast } from "@/components/ui";
 import { PwaSupport } from "@/components/pwa";
 import { SLOTS, SPACES } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
@@ -84,6 +84,7 @@ export default function ConfiguracoesPage() {
   const [limitReservations, setLimitReservations] = useState(false);
   const [notifyStudents, setNotifyStudents] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
   const closeToast = useCallback(() => setToast(null), []);
 
   if (user?.role !== "professor") {
@@ -315,16 +316,24 @@ export default function ConfiguracoesPage() {
         </div>
         <Button
           variant="secondary"
-          onClick={() => {
-            if (window.confirm("Apagar todas as reservas e atividades salvas neste navegador?")) {
-              clearData();
-              setToast("Dados apagados. O app voltou a ficar vazio.");
-            }
-          }}
+          onClick={() => setConfirmClear(true)}
         >
           Limpar dados
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirmClear}
+        onClose={() => setConfirmClear(false)}
+        onConfirm={() => {
+          setConfirmClear(false);
+          clearData();
+          setToast("Dados apagados. O app voltou a ficar vazio.");
+        }}
+        title="Apagar todos os dados?"
+        description="Todas as reservas e atividades serão apagadas do banco de dados. Essa ação não pode ser desfeita."
+        confirmLabel="Sim, apagar tudo"
+      />
 
       <Toast message={toast} onClose={closeToast} />
     </div>

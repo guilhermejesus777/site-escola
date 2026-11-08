@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { IconAlert, IconCheck, IconX } from "@/components/icons";
+import { IconAlert, IconCheck, IconTrash, IconX } from "@/components/icons";
 
 /* ---------------------------------- Botões --------------------------------- */
 
@@ -182,6 +182,107 @@ export function Modal({
             {footer}
           </div>
         ) : null}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/* ------------------------- Diálogo de confirmação ------------------------- */
+
+/**
+ * Modal de confirmação para ações destrutivas (excluir reserva, atividade...).
+ * Bonito, acessível e consistente: fecha com Esc, clique fora e o foco vai
+ * para o botão de confirmação assim que abre.
+ */
+export function ConfirmDialog({
+  open,
+  onClose,
+  onConfirm,
+  title,
+  description,
+  confirmLabel = "Excluir",
+  cancelLabel = "Cancelar",
+  tone = "danger",
+}: {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  tone?: "danger" | "neutral";
+}) {
+  const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    confirmButtonRef.current?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Fechar"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-slate-900/50 backdrop-blur-[3px] animate-fade-in"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="animate-slide-up relative w-full max-w-sm rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+      >
+        <div className="flex items-start gap-4">
+          <span
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
+              tone === "danger"
+                ? "bg-rose-50 text-rose-600 dark:bg-rose-500/15 dark:text-rose-300"
+                : "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300"
+            }`}
+          >
+            <IconTrash width={22} height={22} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+              {title}
+            </h2>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              {description}
+            </p>
+          </div>
+        </div>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <Button variant="secondary" onClick={onClose}>
+            {cancelLabel}
+          </Button>
+          <button
+            ref={confirmButtonRef}
+            type="button"
+            onClick={onConfirm}
+            className={`inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-medium shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 ${
+              tone === "danger"
+                ? "bg-rose-600 text-white hover:bg-rose-700 focus-visible:outline-rose-500 dark:bg-rose-500 dark:hover:bg-rose-400"
+                : "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+            }`}
+          >
+            {confirmLabel}
+          </button>
+        </div>
       </div>
     </div>,
     document.body,
