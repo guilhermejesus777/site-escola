@@ -18,11 +18,11 @@ Acesse `http://localhost:3000` no computador ou no celular (mesma rede: use o en
 ### 1. Login (1 min)
 
 1. Na tela inicial, escolha **Sou professor**.
-2. Informe um e-mail de professor cadastrado (ex.: `ana.souza@escola.pr.gov.br`) e clique em **Entrar**. Só domínios conhecidos são aceitos e o perfil de professor exige um e-mail da lista de professores cadastrados.
+2. Informe um e-mail de professor cadastrado (ex.: `cesar.chauchuty@escola.pr.gov.br`) e clique em **Entrar**. Só domínios conhecidos são aceitos e o perfil de professor exige um e-mail da lista de professores cadastrados.
 3. Mostre que o nome do perfil é criado a partir do e-mail (Ana Souza) e que a sessão continua ativa ao recarregar a página.
 4. No fim da demonstração, mostre o **Sair** e repita o login como **Sou aluno** para comparar as permissões.
 
-> Alunos enxergam o calendário e a agenda em modo somente leitura: não há botões de reservar, cancelar, publicar ou excluir, e Configurações fica oculta. O perfil de professor só funciona com os e-mails cadastrados em `src/lib/access.ts` (ex.: `ana.souza@escola.pr.gov.br`, `carlos.lima@escola.pr.gov.br`).
+> Alunos enxergam o calendário e a agenda em modo somente leitura: não há botões de reservar, cancelar, publicar ou excluir, e Configurações fica oculta. O perfil de professor só funciona com o e-mail cadastrado em `src/lib/access.ts` (`cesar.chauchuty@escola.pr.gov.br`).
 
 ### 2. Painel inicial (30 s)
 

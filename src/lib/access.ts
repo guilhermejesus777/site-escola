@@ -10,12 +10,9 @@ export type RegisteredTeacher = {
 };
 
 export const REGISTERED_TEACHERS: RegisteredTeacher[] = [
-  { email: "ana.souza@escola.pr.gov.br", name: "Ana Souza" },
-  { email: "carlos.lima@escola.pr.gov.br", name: "Carlos Lima" },
-  { email: "mariana.alves@escola.pr.gov.br", name: "Mariana Alves" },
-  { email: "rafael.costa@escola.pr.gov.br", name: "Rafael Costa" },
-  { email: "juliana.reis@escola.pr.gov.br", name: "Juliana Reis" },
-  { email: "pedro.martins@escola.pr.gov.br", name: "Pedro Martins" },
+  // Cadastro real da coordenação. Adicione novos professores no mesmo formato:
+  // { email: "nome.sobrenome@escola.pr.gov.br", name: "Nome Sobrenome" },
+  { email: "cesar.chauchuty@escola.pr.gov.br", name: "Cesar Chauchuty" },
 ];
 
 export function findRegisteredTeacher(email: string): RegisteredTeacher | undefined {
