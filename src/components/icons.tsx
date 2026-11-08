@@ -257,6 +257,17 @@ export function IconPresentation(props: IconProps) {
   );
 }
 
+export function IconPalette(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1.1.9-2 2-2h2.4A4.6 4.6 0 0 0 22 10.9C22 5.9 17.5 2 12 2Z" />
+      <circle cx="7.5" cy="10.5" r="1" />
+      <circle cx="10.5" cy="6.5" r="1" />
+      <circle cx="15.5" cy="7.5" r="1" />
+    </svg>
+  );
+}
+
 export function IconLogOut(props: IconProps) {
   return (
     <svg {...base(props)}>

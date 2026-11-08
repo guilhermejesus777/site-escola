@@ -4,7 +4,7 @@ import "./globals.css";
 import { StoreProvider } from "@/lib/store";
 import { AuthGate } from "@/components/auth-gate";
 
-const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("site-escola:tema");var d=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light";}catch(e){}})();`;
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem("site-escola:tema");var d=t==="dark"||((!t||t==="system")&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light";var e=localStorage.getItem("site-escola:tema-escola");if(e==="on"){document.documentElement.dataset.escola="on";}else{document.documentElement.removeAttribute("data-escola");}}catch(err){}})();`;
 
 export const metadata: Metadata = {
   title: "Agenda Escolar — Reservas e Provas",

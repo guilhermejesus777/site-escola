@@ -25,6 +25,56 @@ body {
   color: #e2e8f0;
 }
 
+/* ==========================================================================
+   TEMA DA ESCOLA
+   --------------------------------------------------------------------------
+   Substitua a paleta abaixo pelas cores oficiais da escola. O botão de
+   "Tema da escola" (ao lado do botão claro/escuro) apenas liga este bloco.
+   As variáveis `--color-indigo-*` são o azul/roxo padrão do app; trocando-as,
+   todos os botões, links, ícones e destaques passam a usar a cor da escola.
+   ========================================================================== */
+:root {
+  /* Cor principal (hoje: verde-escola — troque pelos valores oficiais) */
+  --escola-50: #eefbf4;
+  --escola-100: #d6f5e3;
+  --escola-200: #b0e9cb;
+  --escola-300: #7bd7ab;
+  --escola-400: #45bd87;
+  --escola-500: #22a26c;
+  --escola-600: #148257;
+  --escola-700: #116848;
+  --escola-800: #11533b;
+  --escola-900: #0f4432;
+  --escola-950: #07261d;
+
+  /* Fundos claros do tema da escola */
+  --escola-page: #f2f9f5;
+  --escola-surface-muted: #eef7f2;
+  --escola-surface-strong: #e0efe7;
+}
+
+html[data-escola="on"] {
+  --color-indigo-50: var(--escola-50);
+  --color-indigo-100: var(--escola-100);
+  --color-indigo-200: var(--escola-200);
+  --color-indigo-300: var(--escola-300);
+  --color-indigo-400: var(--escola-400);
+  --color-indigo-500: var(--escola-500);
+  --color-indigo-600: var(--escola-600);
+  --color-indigo-700: var(--escola-700);
+  --color-indigo-800: var(--escola-800);
+  --color-indigo-900: var(--escola-900);
+  --color-indigo-950: var(--escola-950);
+
+  /* Deixa o fundo levemente esverdeado no modo claro */
+  --color-slate-50: var(--escola-surface-muted);
+  --color-slate-100: var(--escola-surface-strong);
+}
+
+html[data-escola="on"]:not(.dark) body {
+  background-color: var(--escola-page);
+}
+
 /* Rolagem horizontal do calendário sem barra visual pesada */
 .calendar-scroll {
   scrollbar-width: thin;

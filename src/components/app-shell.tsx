@@ -11,6 +11,7 @@ import {
   IconSettings,
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SchoolThemeToggle } from "@/components/school-theme-toggle";
 import { useStore } from "@/lib/store";
 
 type NavItem = {
@@ -80,7 +81,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-between gap-2 px-4 py-5">
           <Brand />
-          <ThemeToggle />
+          <div className="flex items-center gap-1.5">
+            <ThemeToggle />
+            <SchoolThemeToggle />
+          </div>
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {navItems.map((item) => {
@@ -150,6 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Brand />
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
+          <SchoolThemeToggle />
           <span
             className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-[11px] font-bold text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300"
             title={`${name} · ${roleLabel}`}

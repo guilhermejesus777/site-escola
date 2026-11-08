@@ -10,6 +10,7 @@ import {
   IconPresentation,
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SchoolThemeToggle } from "@/components/school-theme-toggle";
 import { Button, Field, inputClass } from "@/components/ui";
 import { isRegisteredTeacher } from "@/lib/access";
 import { ALLOWED_DOMAINS_LABEL, validateEmail } from "@/lib/email";
@@ -72,7 +73,10 @@ export function LoginScreen() {
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
       <header className="flex items-center justify-between px-4 py-4 sm:px-8">
         <Brand />
-        <ThemeToggle />
+        <div className="flex items-center gap-1.5">
+          <ThemeToggle />
+          <SchoolThemeToggle />
+        </div>
       </header>
 
       <main className="flex flex-1 items-center justify-center px-4 pb-10 pt-2 sm:px-6">
