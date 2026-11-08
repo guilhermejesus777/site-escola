@@ -16,6 +16,7 @@ import {
   IconX,
 } from "@/components/icons";
 import { Badge, Button, Toast } from "@/components/ui";
+import { PwaSupport } from "@/components/pwa";
 import { SLOTS, SPACES } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import type { Space } from "@/types";
@@ -293,6 +294,16 @@ export default function ConfiguracoesPage() {
             </table>
           </div>
         </section>
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900">
+        <div>
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Aplicativo (PWA)</p>
+          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+            Instale a agenda no celular e acesse sem precisar abrir o navegador.
+          </p>
+        </div>
+        <PwaSupport variant="inline" />
       </div>
 
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900">

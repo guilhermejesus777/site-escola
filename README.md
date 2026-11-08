@@ -59,6 +59,9 @@ npm start       # serve o build
 - **Modo escuro** com botão de alternância (claro/escuro), aplicado ao calendário, às turmas, ao login e a todas as telas; a escolha fica salva no navegador.
 - Persistência local no navegador (`localStorage`), então a sessão e as alterações sobrevivem ao recarregar.
 - Layout responsivo: barra lateral no computador, navegação inferior no celular.
+- **Tema do colégio (preto e verde):** botão com o mascote do CEPK ao lado do botão claro/escuro; ativa o modo escuro com o verde do Colégio Estadual Presidente Kennedy.
+- **PWA instalável:** `manifest.json` + Service Worker (`public/sw.js`); o app pode ser instalado no celular pelo botão "Instalar aplicativo" (menu lateral e Configurações) e abre em tela cheia, sem barra do navegador.
+- **Foto do colégio** na tela de login (ilustração da entrada do CEPK em `public/escola-cepk.svg`).
 
 ## O que é simulado
 

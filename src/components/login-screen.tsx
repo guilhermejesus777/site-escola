@@ -81,6 +81,19 @@ export function LoginScreen() {
 
       <main className="flex flex-1 items-center justify-center px-4 pb-10 pt-2 sm:px-6">
         <div className="w-full max-w-md">
+          {/* Foto do colégio */}
+          <div className="animate-fade-in mb-4 overflow-hidden rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/escola-cepk.svg"
+              alt="Entrada do Colégio Estadual Presidente Kennedy"
+              className="h-32 w-full object-cover sm:h-40"
+              draggable={false}
+            />
+            <p className="bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+              Colégio Estadual Presidente Kennedy
+            </p>
+          </div>
           {role === null ? (
             <section className="animate-fade-in rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-800 dark:bg-slate-900">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">

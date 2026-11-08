@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Mascote do Colégio Kennedy">
+  <circle cx="32" cy="32" r="32" fill="#0a0d0a"/>
+  <circle cx="32" cy="32" r="29.5" fill="none" stroke="#5cc513" stroke-width="2.5"/>
+
+  <!-- boné do CEPK -->
+  <path d="M14 27c0-9.4 8-15.5 18-15.5S50 17.6 50 27l-1.2 3.2c-5-3-11-4.2-16.8-4.2S20.2 27.2 15.2 30.2L14 27z" fill="#f8fafc"/>
+  <path d="M11.5 28.5c3-1 6.5-1.8 9.5-2l1 2.6c-3.4.2-6.8.9-9.8 2l-.7-2.6z" fill="#e2e8f0"/>
+  <text x="32" y="21.5" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="7" font-weight="bold" fill="#2f9b12" letter-spacing="1.2">CEPK</text>
+
+  <!-- rosto do lobo -->
+  <path d="M16.5 30.5c0 10.5 6.5 18.5 15.5 18.5s15.5-8 15.5-18.5c-4.4-2-9.5-3-15.5-3s-11.1 1-15.5 3z" fill="#9aa7b4"/>
+  <path d="M21 46.5c2.8 1.7 6.5 2.5 11 2.5s8.2-.8 11-2.5c-2.2-2.6-5.3-4-11-4s-8.8 1.4-11 4z" fill="#aab6c2"/>
+  <!-- focinho -->
+  <ellipse cx="32" cy="41.5" rx="9.5" ry="7.2" fill="#eef2f6"/>
+  <!-- olhos -->
+  <circle cx="25.3" cy="33.6" r="2.3" fill="#0a0d0a"/>
+  <circle cx="38.7" cy="33.6" r="2.3" fill="#0a0d0a"/>
+  <circle cx="26" cy="32.9" r="0.7" fill="#ffffff"/>
+  <circle cx="39.4" cy="32.9" r="0.7" fill="#ffffff"/>
+  <!-- nariz -->
+  <ellipse cx="32" cy="38.6" rx="2.6" ry="1.9" fill="#0a0d0a"/>
+  <!-- sorriso -->
+  <path d="M26.5 43.2c1.8 2.2 3.5 3 5.5 3s3.7-.8 5.5-3" stroke="#0a0d0a" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 210" role="img" aria-label="Colégio Estadual Presidente Kennedy">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5db9ee"/>
+      <stop offset="1" stop-color="#bfe6f8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- céu -->
+  <rect width="480" height="130" fill="url(#ceu)"/>
+  <ellipse cx="70" cy="30" rx="34" ry="10" fill="#ffffff" opacity=".9"/>
+  <ellipse cx="100" cy="24" rx="24" ry="8" fill="#ffffff" opacity=".85"/>
+  <ellipse cx="330" cy="40" rx="30" ry="9" fill="#ffffff" opacity=".9"/>
+  <ellipse cx="430" cy="24" rx="26" ry="8" fill="#ffffff" opacity=".85"/>
+
+  <!-- prédio da direita -->
+  <rect x="348" y="38" width="132" height="92" fill="#8ed35a"/>
+  <rect x="348" y="38" width="132" height="6" fill="#6fb43e"/>
+  <g fill="#8fb7d6" stroke="#5b7d99" stroke-width="1.5">
+    <rect x="360" y="52" width="18" height="14"/>
+    <rect x="390" y="52" width="18" height="14"/>
+    <rect x="420" y="52" width="18" height="14"/>
+    <rect x="448" y="52" width="18" height="14"/>
+    <rect x="360" y="80" width="18" height="14"/>
+    <rect x="390" y="80" width="18" height="14"/>
+    <rect x="420" y="80" width="18" height="14"/>
+    <rect x="448" y="80" width="18" height="14"/>
+  </g>
+  <rect x="376" y="76" width="10" height="54" fill="#e8734a"/>
+  <rect x="452" y="98" width="10" height="8" fill="#e8734a"/>
+
+  <!-- galpão ao fundo -->
+  <rect x="120" y="86" width="180" height="36" fill="#a2d473"/>
+  <path d="M120 86h180l-6-9H126l-6 9z" fill="#7fae52"/>
+  <g fill="#7ea8b8"><rect x="140" y="96" width="12" height="8"/><rect x="170" y="96" width="12" height="8"/><rect x="200" y="96" width="12" height="8"/><rect x="230" y="96" width="12" height="8"/></g>
+
+  <!-- árvores -->
+  <rect x="196" y="96" width="8" height="60" fill="#8a5a30"/>
+  <circle cx="200" cy="74" r="26" fill="#3f9e3f"/>
+  <circle cx="184" cy="88" r="16" fill="#4db04b"/>
+  <circle cx="216" cy="90" r="15" fill="#359136"/>
+  <rect x="86" y="102" width="7" height="56" fill="#9c6c3c"/>
+  <circle cx="90" cy="84" r="20" fill="#439b43"/>
+  <circle cx="76" cy="98" r="13" fill="#52ad4e"/>
+  <circle cx="113" cy="114" r="14" fill="#3a8f3a"/>
+  <!-- palmeira -->
+  <path d="M252 176c2-22 4-40 6-56" stroke="#a5713d" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M258 122c-14-8-30-8-40-2M258 122c4-14 16-22 30-22M258 122c14-4 28 0 36 10M258 122c2-14-4-26-14-32" stroke="#3f9e3f" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+  <!-- muro verde -->
+  <rect x="0" y="118" width="480" height="52" fill="#7cc94f"/>
+  <rect x="0" y="118" width="480" height="8" fill="#68b23f"/>
+  <text x="26" y="152" font-family="Arial Black, Arial, sans-serif" font-size="21" font-weight="900" fill="#111411" letter-spacing="1.5">CEPK</text>
+
+  <!-- portão -->
+  <rect x="330" y="126" width="70" height="44" fill="none" stroke="#8a929b" stroke-width="3"/>
+  <g stroke="#8a929b" stroke-width="2">
+    <line x1="342" y1="126" x2="342" y2="170"/>
+    <line x1="354" y1="126" x2="354" y2="170"/>
+    <line x1="376" y1="126" x2="376" y2="170"/>
+    <line x1="388" y1="126" x2="388" y2="170"/>
+    <line x1="330" y1="148" x2="400" y2="148"/>
+  </g>
+
+  <!-- placa do colégio -->
+  <rect x="298" y="88" width="140" height="34" rx="3" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="368" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="#111827" letter-spacing="1">COLÉGIO ESTADUAL</text>
+  <text x="368" y="113" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="11" font-style="italic" fill="#111827">Presidente Kennedy</text>
+  <rect x="392" y="122" width="6" height="22" fill="#6b7280"/>
+
+  <!-- calçada -->
+  <rect x="0" y="170" width="480" height="14" fill="#eceff3"/>
+  <g fill="#0f1210" opacity=".85">
+    <path d="M8 170c8 7 24 7 32 0l14 14c-16 7-44 7-60 0z"/>
+    <path d="M86 170c8 7 24 7 32 0l14 14c-16 7-44 7-60 0z" transform="translate(0 0)"/>
+    <path d="M164 170c8 7 24 7 32 0l14 14c-16 7-44 7-60 0z"/>
+    <path d="M242 170c8 7 24 7 32 0l14 14c-16 7-44 7-60 0z"/>
+    <path d="M320 170c8 7 24 7 32 0l14 14c-16 7-44 7-60 0z"/>
+    <path d="M398 170c8 7 24 7 32 0l14 14c-16 7-44 7-60 0z"/>
+  </g>
+
+  <!-- rua -->
+  <rect x="0" y="184" width="480" height="26" fill="#565d64"/>
+
+  <!-- flores -->
+  <circle cx="412" cy="164" r="2.6" fill="#f59e0b"/>
+  <circle cx="420" cy="160" r="2.4" fill="#e11d48"/>
+  <circle cx="428" cy="165" r="2.4" fill="#8b5cf6"/>
+  <circle cx="406" cy="159" r="2.2" fill="#facc15"/>
+  <circle cx="446" cy="163" r="2.4" fill="#ec4899"/>
+</svg>

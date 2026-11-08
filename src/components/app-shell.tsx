@@ -12,6 +12,7 @@ import {
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SchoolThemeToggle } from "@/components/school-theme-toggle";
+import { PwaSupport } from "@/components/pwa";
 import { useStore } from "@/lib/store";
 
 type NavItem = {
@@ -123,6 +124,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
             Tudo o que você criar fica só neste dispositivo neste protótipo.
           </p>
+          <div className="mt-2">
+            <PwaSupport />
+          </div>
         </div>
 
         <div className="flex items-center gap-2.5 border-t border-slate-100 px-4 py-3 dark:border-slate-800">
