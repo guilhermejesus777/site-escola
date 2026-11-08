@@ -81,8 +81,8 @@ export function LoginScreen() {
 
       <main className="flex flex-1 items-center justify-center px-4 pb-10 pt-2 sm:px-6">
         <div className="w-full max-w-md">
-          {/* Foto do colégio */}
-          <div className="animate-fade-in mb-4 overflow-hidden rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
+          {/* Foto do colégio — visível apenas no tema do colégio */}
+          <div className="escola-banner overflow-hidden rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/escola-cepk.svg"

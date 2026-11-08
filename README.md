@@ -44,6 +44,18 @@ npm run build   # build de produção
 npm start       # serve o build
 ```
 
+### Banco de dados (PostgreSQL no Neon)
+
+Sem configuração, os dados ficam só no navegador (`localStorage`). Para usar o
+banco (o app já está preparado para isso):
+
+1. Crie um banco grátis em <https://neon.com> e copie a connection string;
+2. Crie o arquivo `.env.local` (veja o exemplo em `.env.example`) com
+   `DATABASE_URL="postgresql://…?sslmode=require"`;
+3. Reinicie o app. As tabelas (`reservas`, `atividades`, `bloqueios`) são criadas
+   automaticamente e todos os usuários passam a ver os mesmos dados;
+4. No Render, configure a mesma variável `DATABASE_URL` nas opções do serviço.
+
 > No Windows, se o PowerShell bloquear `npm.ps1`, use `npm.cmd run dev`.
 
 ## O que já funciona

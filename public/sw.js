@@ -2,19 +2,22 @@
  * Service Worker do protótipo (PWA).
  *
  * Estratégia:
- * - Arquivos estáticos (imagens, manifest, ícones): cache-first.
  * - Páginas e navegações: network-first, com fallback para o cache
- *   quando o dispositivo está sem internet.
+ *   quando o dispositivo está sem internet (modo offline básico).
+ * - Apenas recursos realmente estáticos (manifest, ícones, ilustrações)
+ *   usam cache.
+ * - JavaScript/CSS e a API NUNCA passam pelo cache, para o app sempre
+ *   carregar a versão mais recente.
  */
-const CACHE_NAME = "site-escola-v1";
+const CACHE_NAME = "site-escola-v2";
 
 const STATIC_ASSETS = [
-  "/",
   "/manifest.json",
   "/mascote-cepk.svg",
   "/escola-cepk.svg",
   "/icon-192.png",
   "/icon-512.png",
+  "/apple-touch-icon.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -41,7 +44,14 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
 
-  // Navegações (HTML): rede primeiro, cache como reserva.
+  const path = new URL(request.url).pathname;
+
+  // API e arquivos de código: sempre pela rede.
+  if (!["/manifest.json", "/mascote-cepk.svg", "/escola-cepk.svg", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png"].some(asset => path === asset)) {
+    return;
+  }
+
+  // Navegações sem conexão: tenta a rede primeiro e usa a cópia em cache.
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -55,12 +65,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Estáticos: cache primeiro.
+  // Recursos estáticos listados: cache primeiro.
   event.respondWith(
     caches.match(request).then((hit) => {
       if (hit) return hit;
       return fetch(request).then((response) => {
-        if (response.ok && request.url.startsWith(self.location.origin)) {
+        if (response.ok) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
         }

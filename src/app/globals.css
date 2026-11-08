@@ -80,6 +80,16 @@ html[data-escola="on"] body {
   color: #e6efe9;
 }
 
+/* Foto do colégio na tela de login: só aparece no tema do colégio */
+.escola-banner {
+  display: none;
+  margin-bottom: 1rem;
+}
+
+html[data-escola="on"] .escola-banner {
+  display: block;
+}
+
 /* Rolagem horizontal do calendário sem barra visual pesada */
 .calendar-scroll {
   scrollbar-width: thin;

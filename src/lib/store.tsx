@@ -41,7 +41,18 @@ type StoreValue = DataState & {
   clearData: () => void;
 };
 
-const StoreContext = createContext<StoreValue | null>(null);
+  const StoreContext = createContext<StoreValue | null>(null);
+
+/** Envia uma operação ao banco (fire-and-forget; falhas são ignoradas). */
+function sendToDb(op: string, extra?: { record?: unknown; id?: string }) {
+  void fetch("/api/dados", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ op, ...extra }),
+  }).catch(() => {
+    // Sem banco/servidor: o estado local continua válido.
+  });
+}
 
 function makeId(prefix: string): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -104,6 +115,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           });
         }
       }
+
+      // Banco de dados (Neon/PostgreSQL): sobrescreve o cache local com o
+      // estado oficial do banco. Se indisponível, segue o modo local.
+      void (async () => {
+        try {
+          const response = await fetch("/api/dados", { cache: "no-store" });
+          if (response.ok) {
+            const payload = (await response.json()) as {
+              ok: boolean;
+              data?: Partial<DataState>;
+            };
+            if (payload.ok && payload.data) {
+              const db = payload.data;
+              setState({
+                reservations: Array.isArray(db.reservations) ? db.reservations : [],
+                blocks: Array.isArray(db.blocks) ? db.blocks : [],
+                activities: Array.isArray(db.activities) ? db.activities : [],
+              });
+            }
+          }
+        } catch {
+          // Sem servidor/banco: o modo local (localStorage) continua valendo.
+        }
+      })();
     } catch {
       // Se o armazenamento estiver indisponível, seguimos com os dados vazios.
     }
@@ -184,16 +219,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (existing) {
         return `Este horário acabou de ser reservado por ${existing.teacher}. Escolha outro.`;
       }
+      const record: Reservation = {
+        ...input,
+        id: makeId("reserva"),
+        createdAt: new Date().toISOString(),
+      };
+      sendToDb("reserva.create", { record });
       setState((current) => ({
         ...current,
-        reservations: [
-          ...current.reservations,
-          {
-            ...input,
-            id: makeId("reserva"),
-            createdAt: new Date().toISOString(),
-          },
-        ],
+        reservations: [...current.reservations, record],
       }));
       return null;
     },
@@ -207,6 +241,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...current,
         reservations: current.reservations.filter((item) => item.id !== id),
       }));
+      sendToDb("reserva.delete", { id });
     },
     [user],
   );
@@ -219,6 +254,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         id: makeId("atividade"),
         createdAt: new Date().toISOString(),
       };
+      sendToDb("atividade.create", { record: activity });
       setState((current) => ({
         ...current,
         activities: [activity, ...current.activities],
@@ -234,6 +270,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...current,
         activities: current.activities.filter((item) => item.id !== id),
       }));
+      sendToDb("atividade.delete", { id });
     },
     [user],
   );
@@ -241,6 +278,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const clearData = useCallback(() => {
     if (user?.role !== "professor") return;
     setState(createInitialData());
+    sendToDb("reset");
   }, [user]);
 
   const value = useMemo<StoreValue>(
