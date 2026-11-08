@@ -14,22 +14,7 @@ export const SPACES: Space[] = [
     description: "32 computadores · Projetor · Ar-condicionado",
     tone: "indigo",
   },
-  {
-    id: "video",
-    name: "Sala de Vídeo",
-    short: "Sala de Vídeo",
-    description: "Projetor · Som · 40 lugares",
-    tone: "sky",
-  },
-  {
-    id: "quadra",
-    name: "Quadra Poliesportiva",
-    short: "Quadra",
-    description: "Coberta · Vestuário · Materiais esportivos",
-    tone: "emerald",
-  },
 ];
-
 export const SLOTS: Slot[] = [
   { id: "s1", label: "1ª aula", start: "07:00", end: "07:50" },
   { id: "s2", label: "2ª aula", start: "07:50", end: "08:40" },
@@ -62,12 +47,7 @@ export const SUBJECTS = [
 ];
 
 export const TEACHERS = [
-  "Ana Souza",
-  "Carlos Lima",
-  "Mariana Alves",
-  "Rafael Costa",
-  "Juliana Reis",
-  "Pedro Martins",
+  "Cesar Chauchuty",
 ];
 
 export const KIND_LABEL: Record<ActivityKind, string> = {
