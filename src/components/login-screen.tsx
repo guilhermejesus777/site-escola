@@ -73,9 +73,9 @@ export function LoginScreen() {
     <div className="relative flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
       {/* Mascote de fundo — visível apenas no tema do colégio */}
       <div className="escola-bg" aria-hidden="true">
+        <div className="escola-bg__overlay" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/mascote-cepk.svg" alt="" className="escola-bg__mascote" draggable={false} />
-        <div className="escola-bg__overlay" />
       </div>
 
       <header className="relative z-10 flex items-center justify-between px-4 py-4 sm:px-8">
