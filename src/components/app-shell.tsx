@@ -84,7 +84,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="escola-bg escola-bg--home" aria-hidden="true">
           <div className="escola-bg__overlay" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/mascote-cepk.svg" alt="" className="escola-bg__mascote" draggable={false} />
+          <img
+            src="/mascote-corpo-inteiro.svg"
+            alt=""
+            className="escola-bg__mascote"
+            draggable={false}
+          />
         </div>
       ) : null}{" "}
       {/* Barra lateral (desktop) */}
