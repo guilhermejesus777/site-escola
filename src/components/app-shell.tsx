@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType, ReactNode, SVGProps } from "react";
+import { useState } from "react";
 import {
   IconBook,
   IconCalendar,
@@ -13,6 +14,7 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SchoolThemeToggle } from "@/components/school-theme-toggle";
 import { PwaSupport } from "@/components/pwa";
+import { ConfirmDialog } from "@/components/ui";
 import { useStore } from "@/lib/store";
 
 type NavItem = {
@@ -69,11 +71,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const roleLabel = isProfessor ? "Professor(a)" : "Aluno(a)";
   const navItems = NAV.filter((item) => !item.professorOnly || isProfessor);
   const initials = initialsOf(name);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   function handleLogout() {
-    if (window.confirm("Sair da conta? Você precisará entrar novamente com seu e-mail.")) {
-      logout();
-    }
+    setConfirmLogout(true);
   }
 
   return (
@@ -209,6 +210,21 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </div>
       </nav>
+
+      <ConfirmDialog
+        open={confirmLogout}
+        onClose={() => setConfirmLogout(false)}
+        onConfirm={() => {
+          setConfirmLogout(false);
+          logout();
+        }}
+        title="Sair da conta?"
+        description="Tem certeza que deseja sair? Você precisará entrar novamente com seu e-mail."
+        confirmLabel="Sair"
+        cancelLabel="Cancelar"
+        tone="neutral"
+        icon={<IconLogOut width={22} height={22} />}
+      />
     </div>
   );
 }

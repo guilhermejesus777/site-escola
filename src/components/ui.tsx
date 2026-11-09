@@ -204,6 +204,7 @@ export function ConfirmDialog({
   confirmLabel = "Excluir",
   cancelLabel = "Cancelar",
   tone = "danger",
+  icon,
 }: {
   open: boolean;
   onClose: () => void;
@@ -213,6 +214,7 @@ export function ConfirmDialog({
   confirmLabel?: string;
   cancelLabel?: string;
   tone?: "danger" | "neutral";
+  icon?: ReactNode;
 }) {
   const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -255,7 +257,7 @@ export function ConfirmDialog({
                 : "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300"
             }`}
           >
-            <IconTrash width={22} height={22} />
+            {icon ?? <IconTrash width={22} height={22} />}
           </span>
           <div className="min-w-0 flex-1">
             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">

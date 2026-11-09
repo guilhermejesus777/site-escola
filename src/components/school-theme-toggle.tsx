@@ -31,6 +31,7 @@ export function SchoolThemeToggle({ className = "" }: { className?: string }) {
       root.dataset.escola = "on";
       root.classList.add("dark");
       root.style.colorScheme = "dark";
+      window.dispatchEvent(new Event("site-escola:escola-change"));
       return;
     }
     // Ao desligar, restaura o modo claro/escuro salvo pelo ThemeToggle.
@@ -47,6 +48,7 @@ export function SchoolThemeToggle({ className = "" }: { className?: string }) {
     }
     root.classList.toggle("dark", dark);
     root.style.colorScheme = dark ? "dark" : "light";
+    window.dispatchEvent(new Event("site-escola:escola-change"));
   }
 
   return (
