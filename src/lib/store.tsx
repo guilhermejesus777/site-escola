@@ -30,7 +30,7 @@ type ActivityInput = Omit<Activity, "id" | "createdAt">;
 
 type StoreValue = DataState & {
   user: SessionUser | null;
-  login: (email: string, role: UserRole) => boolean;
+  login: (email: string, role: UserRole, name?: string) => boolean;
   logout: () => void;
   getReservation: (spaceId: string, date: string, slotId: string) => Reservation | undefined;
   getBlock: (spaceId: string, date: string, slotId: string) => Block | undefined;
@@ -154,7 +154,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [state, ready]);
 
-  const login = useCallback((email: string, role: UserRole) => {
+  const login = useCallback((email: string, role: UserRole, name?: string) => {
     const result = validateEmail(email);
     if (!result.ok) return false;
     const teacher =
@@ -163,7 +163,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const cleanEmail = result.email;
     const nextUser: SessionUser = {
       email: cleanEmail,
-      name: teacher?.name ?? nameFromEmail(cleanEmail),
+      name: teacher?.name ?? (name?.trim() || nameFromEmail(cleanEmail)),
       role,
     };
     setUser(nextUser);

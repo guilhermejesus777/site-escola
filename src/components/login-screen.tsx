@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Brand } from "@/components/app-shell";
 import {
   IconAlert,
@@ -11,26 +11,40 @@ import {
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SchoolThemeToggle } from "@/components/school-theme-toggle";
-import { Button, Field, inputClass } from "@/components/ui";
-import { isRegisteredTeacher } from "@/lib/access";
-import { ALLOWED_DOMAINS_LABEL, validateEmail } from "@/lib/email";
 import { useStore } from "@/lib/store";
 import type { UserRole } from "@/types";
 
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+
+type GoogleCredentialResponse = { credential?: string };
+type GoogleIdentity = {
+  initialize: (options: {
+    client_id: string;
+    callback: (response: GoogleCredentialResponse) => void;
+    ux_mode?: "popup" | "redirect";
+    auto_select?: boolean;
+  }) => void;
+  renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
+};
+
+declare global {
+  interface Window {
+    google?: { accounts?: { id?: GoogleIdentity } };
+  }
+}
+
 const ROLES: Record<
   UserRole,
-  { label: string; article: string; description: string; icon: typeof IconGraduationCap; tone: string }
+  { label: string; description: string; icon: typeof IconGraduationCap; tone: string }
 > = {
   aluno: {
     label: "Aluno",
-    article: "o",
     description: "Ver provas, trabalhos e a agenda da escola.",
     icon: IconGraduationCap,
     tone: "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
   },
   professor: {
     label: "Professor",
-    article: "o",
     description: "Reservar espaços e publicar atividades. Requer e-mail cadastrado pela coordenação.",
     icon: IconPresentation,
     tone: "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300",
@@ -40,34 +54,100 @@ const ROLES: Record<
 export function LoginScreen() {
   const { login } = useStore();
   const [role, setRole] = useState<UserRole | null>(null);
-  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
 
   function chooseRole(next: UserRole) {
     setRole(next);
     setError(null);
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!role) return;
-    const result = validateEmail(email);
-    if (!result.ok) {
-      setError(
-        result.reason === "dominio"
-          ? `Domínio não aceito. Use um destes: ${ALLOWED_DOMAINS_LABEL}.`
-          : "Digite um e-mail válido, como nome@gmail.com.",
-      );
-      return;
+  useEffect(() => {
+    if (!role || !GOOGLE_CLIENT_ID) return;
+    const currentRole = role;
+    let cancelled = false;
+
+    function renderButton() {
+      if (cancelled) return;
+      const identity = window.google?.accounts?.id;
+      const container = googleButtonRef.current;
+      if (!identity || !container) return;
+
+      container.innerHTML = "";
+      identity.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        ux_mode: "popup",
+        callback: async (response) => {
+          if (!response.credential) {
+            setError("Não foi possível obter sua conta Google. Tente novamente.");
+            return;
+          }
+          setLoading(true);
+          setError(null);
+          try {
+            const result = await fetch("/api/auth/google", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ credential: response.credential, role: currentRole }),
+            });
+            const data = (await result.json()) as {
+              email?: string;
+              name?: string;
+              error?: string;
+            };
+            if (!result.ok || !data.email) {
+              setError(data.error ?? "Não foi possível entrar com essa conta Google.");
+              return;
+            }
+            if (!login(data.email, currentRole, data.name)) {
+              setError("Não foi possível entrar. Confira se o e-mail está cadastrado.");
+            }
+          } catch {
+            setError("Falha de conexão ao validar sua conta Google. Tente novamente.");
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
+      identity.renderButton(container, {
+        theme: "filled_black",
+        size: "large",
+        shape: "pill",
+        text: "signin_with",
+        locale: "pt-BR",
+        width: 300,
+      });
     }
-    if (role === "professor" && !isRegisteredTeacher(result.email)) {
-      setError("Este e-mail não está cadastrado como professor. Fale com a coordenação.");
-      return;
+
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[data-google-gsi="true"]',
+    );
+    if (existing) {
+      if (window.google?.accounts?.id) {
+        renderButton();
+      } else {
+        existing.addEventListener("load", renderButton);
+      }
+      return () => {
+        cancelled = true;
+        existing.removeEventListener("load", renderButton);
+      };
     }
-    if (!login(result.email, role)) {
-      setError("Não foi possível entrar. Confira o e-mail e o perfil escolhido.");
-    }
-  }
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.dataset.googleGsi = "true";
+    script.addEventListener("load", renderButton);
+    document.head.appendChild(script);
+
+    return () => {
+      cancelled = true;
+      script.removeEventListener("load", renderButton);
+    };
+  }, [role, login]);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
@@ -94,6 +174,7 @@ export function LoginScreen() {
               Colégio Estadual Presidente Kennedy
             </p>
           </div>
+
           {role === null ? (
             <section className="animate-fade-in rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-800 dark:bg-slate-900">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
@@ -104,7 +185,7 @@ export function LoginScreen() {
                 Como você vai acessar?
               </h1>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Escolha o seu perfil para continuar. Você poderá entrar com o e-mail da escola.
+                Escolha o seu perfil. O acesso é feito com a sua conta Google da escola.
               </p>
 
               <div className="mt-5 space-y-3">
@@ -142,8 +223,8 @@ export function LoginScreen() {
               </div>
 
               <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-                Protótipo: o acesso é simulado e não pede senha. Seus dados ficam apenas neste
-                navegador.
+                O acesso usa a sua conta Google. A senha é digitada no Google e não passa por este
+                site.
               </p>
             </section>
           ) : (
@@ -178,57 +259,42 @@ export function LoginScreen() {
                   </h1>
                 </div>
               </div>
+
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 {role === "professor"
-                  ? "Informe o e-mail cadastrado pela coordenação da escola."
-                  : "Informe o seu e-mail da escola para acessar a agenda."}
+                  ? "Entre com a conta Google cadastrada pela coordenação."
+                  : "Entre com a sua conta Google da escola para acessar a agenda."}
               </p>
 
-              <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-                <Field
-                  label="E-mail"
-                  required
-                  hint={
-                    role === "professor"
-                      ? "Use o e-mail de professor cadastrado pela coordenação."
-                      : `Aceitos: ${ALLOWED_DOMAINS_LABEL}.`
-                  }
-                >
-                  <input
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    autoFocus
-                    className={inputClass}
-                    placeholder={
-                      role === "professor"
-                        ? "nome.sobrenome@escola.pr.gov.br"
-                        : "nome.sobrenome@gmail.com"
-                    }
-                    value={email}
-                    onChange={(event) => {
-                      setEmail(event.target.value);
-                      if (error) setError(null);
-                    }}
-                  />
-                </Field>
+              {GOOGLE_CLIENT_ID ? (
+                <div className="mt-6 flex flex-col items-center">
+                  <div ref={googleButtonRef} className="flex min-h-11 justify-center" />
+                  {loading ? (
+                    <p className="mt-3 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                      Verificando sua conta Google...
+                    </p>
+                  ) : null}
+                  <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
+                    Sua senha é digitada no Google, nunca neste site.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-[11px] leading-relaxed text-amber-800 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200">
+                  <IconAlert width={15} height={15} className="mt-0.5 shrink-0" />
+                  <span>
+                    O login com Google ainda não foi configurado. A coordenação precisa definir a
+                    variável <code className="font-semibold">NEXT_PUBLIC_GOOGLE_CLIENT_ID</code> com
+                    o Client ID do Google Cloud.
+                  </span>
+                </div>
+              )}
 
-                {error ? (
-                  <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[11px] font-medium text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
-                    <IconAlert width={14} height={14} className="mt-0.5 shrink-0" />
-                    {error}
-                  </div>
-                ) : null}
-
-                <Button type="submit" className="w-full">
-                  Entrar
-                  <IconArrowRight width={15} height={15} />
-                </Button>
-              </form>
-
-              <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-                Ainda não tem acesso? Fale com a coordenação da escola.
-              </p>
+              {error ? (
+                <div className="mt-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[11px] font-medium text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                  <IconAlert width={14} height={14} className="mt-0.5 shrink-0" />
+                  {error}
+                </div>
+              ) : null}
             </section>
           )}
         </div>

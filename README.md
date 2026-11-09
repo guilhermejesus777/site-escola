@@ -21,7 +21,7 @@ App web para a escola resolver dois problemas em um só lugar:
 
 | Rota | Tela | O que faz |
 |---|---|---|
-| `/` | Login | Escolha entre **Aluno** e **Professor**, depois informe o e-mail da escola. A sessão fica salva no navegador. |
+| `/` | Login | Escolha entre **Aluno** e **Professor** e entre com a conta Google da escola. A senha é digitada no Google e nunca passa pelo site. A sessão fica salva no navegador. |
 | `/` (logado) | Início | Próxima reserva, indicadores, agenda da escola e próximas entregas. |
 | `/reservas` | Reservas | Calendário semanal por espaço, reserva em 2 cliques, cancelamento, bloqueios da coordenação e ocupação da semana. |
 | `/atividades` | Provas e atividades | Calendário mensal, lista de próximas entregas, detalhe com anexos e publicação de nova atividade. |
@@ -46,6 +46,25 @@ npm run build   # build de produção
 npm start       # serve o build
 ```
 
+### Login com Google (obrigatório)
+
+O app não recebe senhas. O aluno/professor entra com a conta Google da escola e o
+Google faz a verificação da senha.
+
+1. Crie um projeto em <https://console.cloud.google.com>;
+2. Ative a **Google Identity Services** (também chamada de "Sign in with Google");
+3. Crie um **OAuth 2.0 Client ID** do tipo **Web application**;
+4. Em **Origens JavaScript autorizadas**, adicione:
+   - `http://localhost:3000`
+   - `https://site-escola-1nmy.onrender.com`
+5. Coloque o Client ID no `.env.local`:
+   `NEXT_PUBLIC_GOOGLE_CLIENT_ID="...apps.googleusercontent.com"`;
+6. No Render, cadastre a mesma variável `NEXT_PUBLIC_GOOGLE_CLIENT_ID` e faça um novo deploy.
+
+Sem essa variável, a tela de login mostra um aviso de configuração e ninguém
+consegue entrar. Os e-mails autorizados ficam em `src/lib/access.ts`:
+professores em `REGISTERED_TEACHERS` e alunos em `REGISTERED_STUDENTS`.
+
 ### Banco de dados (PostgreSQL no Neon)
 
 Sem configuração, os dados ficam só no navegador (`localStorage`). Para usar o
@@ -62,7 +81,7 @@ banco (o app já está preparado para isso):
 
 ## O que já funciona
 
-- **Login simulado em duas etapas:** primeiro escolha **Aluno** ou **Professor**, depois informe o e-mail da escola (sem senha). A sessão fica salva no navegador.
+- **Login com Google em duas etapas:** primeiro escolha **Aluno** ou **Professor**, depois entre com a conta Google da escola. A senha é digitada no Google e o servidor valida o token; somente os e-mails cadastrados em `src/lib/access.ts` podem entrar. A sessão fica salva no navegador.
 - **Permissões por perfil:** professores podem reservar espaços, cancelar reservas, publicar e excluir atividades e abrir as configurações; alunos têm acesso somente leitura e não veem Configurações.
 - **App começa vazio:** sem reservas, atividades ou bloqueios de exemplo. Tudo o que aparece é criado pelos usuários.
 - Reserva automática de horário livre com **prevenção de conflito** (o horário fica indisponível na hora).
@@ -79,7 +98,7 @@ banco (o app já está preparado para isso):
 
 ## O que é simulado
 
-- **Login e permissões:** não há senha nem autenticação real. O e-mail é validado e só são aceitos domínios conhecidos (`@gmail.com`, `@hotmail.com`, `@outlook.com`, `@yahoo.com`, `@icloud.com` e `@escola.pr.gov.br`). O perfil de **professor** só é liberado para e-mails cadastrados na lista de professores (`src/lib/access.ts`); os demais recebem a mensagem para falar com a coordenação. O nome é derivado do e-mail (`cesar.chauchuty@escola.pr.gov.br` → "Cesar Chauchuty") e o perfil escolhido fica salvo no navegador.
+- **Login e permissões:** o acesso é feito pelo **Google** e a senha nunca passa por este site. O servidor valida o token do Google e libera o perfil de **professor** apenas para os e-mails de `REGISTERED_TEACHERS` e o de **aluno** apenas para os e-mails de `REGISTERED_STUDENTS`, ambos em `src/lib/access.ts`. Os demais recebem a mensagem para falar com a coordenação. O nome exibido vem da conta Google.
 - **Dados:** não há dados de exemplo. Reservas e atividades são criadas pelos usuários e ficam apenas neste navegador.
 - **Upload:** os arquivos não são enviados; só o nome e o tamanho são guardados.
 - **Configurações:** os ajustes da tela de configurações não são salvos (só a limpeza dos dados funciona).
@@ -106,7 +125,7 @@ src/
 ├── components/
 │   ├── app-shell.tsx       # navegação lateral/inferior e perfil
 │   ├── auth-gate.tsx       # alterna login e app conforme a sessão
-│   ├── login-screen.tsx    # login em duas etapas (perfil + e-mail)
+│   ├── login-screen.tsx    # login em duas etapas (perfil + conta Google)
 │   ├── icons.tsx           # ícones SVG
 │   └── ui.tsx              # botões, modal, badges, toast…
 ├── lib/
