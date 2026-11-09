@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { findRegisteredStudent, findRegisteredTeacher } from "@/lib/access";
+import { GOOGLE_CLIENT_ID } from "@/lib/google";
 
 type GoogleTokenInfo = {
   aud?: string;
@@ -14,7 +15,7 @@ type GoogleTokenInfo = {
  * este app nunca recebe nem armazena a senha.
  */
 export async function POST(request: Request) {
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const clientId = GOOGLE_CLIENT_ID;
   if (!clientId) {
     return NextResponse.json(
       { error: "O login com Google ainda não foi configurado pela escola." },

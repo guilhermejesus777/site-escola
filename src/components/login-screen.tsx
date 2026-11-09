@@ -11,10 +11,9 @@ import {
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SchoolThemeToggle } from "@/components/school-theme-toggle";
+import { GOOGLE_CLIENT_ID } from "@/lib/google";
 import { useStore } from "@/lib/store";
 import type { UserRole } from "@/types";
-
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
 type GoogleCredentialResponse = { credential?: string };
 type GoogleIdentity = {
