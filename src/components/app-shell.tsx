@@ -85,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="escola-bg__overlay" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/mascote-corpo-inteiro.svg"
+            src="/mascote-corpo-inteiro.svg?v=2"
             alt=""
             className="escola-bg__mascote"
             draggable={false}
