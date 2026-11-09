@@ -13,6 +13,7 @@ import {
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SchoolThemeToggle } from "@/components/school-theme-toggle";
+import { MascoteCepk } from "@/components/mascote-cepk";
 import { PwaSupport } from "@/components/pwa";
 import { ConfirmDialog } from "@/components/ui";
 import { useStore } from "@/lib/store";
@@ -83,13 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {pathname === "/" ? (
         <div className="escola-bg escola-bg--home" aria-hidden="true">
           <div className="escola-bg__overlay" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/mascote-corpo-inteiro.svg?v=2"
-            alt=""
-            className="escola-bg__mascote"
-            draggable={false}
-          />
+          <MascoteCepk className="escola-bg__mascote" />
         </div>
       ) : null}{" "}
       {/* Barra lateral (desktop) */}

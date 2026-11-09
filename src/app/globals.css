@@ -157,6 +157,90 @@ html[data-escola="on"] .escola-bg--home .escola-bg__overlay {
   background: radial-gradient(circle at 80% 20%, rgba(92, 197, 19, 0.08), transparent 55%);
 }
 
+/* ------------------------- Animação do mascote ------------------------- */
+@keyframes mascote-flutua {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.5deg);
+  }
+  50% {
+    transform: translateY(-9px) rotate(0.5deg);
+  }
+}
+
+@keyframes mascote-rabo {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+
+@keyframes mascote-pisca {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  93%,
+  96% {
+    transform: scaleY(0.08);
+  }
+}
+
+@keyframes mascote-joinha {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-4deg) translateY(-3px);
+  }
+}
+
+@keyframes mascote-confete {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateY(-9px);
+    opacity: 0.45;
+  }
+}
+
+.mascote-animado {
+  animation: mascote-flutua 5.5s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+
+.mascote-animado .mascote-rabo {
+  animation: mascote-rabo 2.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 100% 20%;
+}
+
+.mascote-animado .mascote-olhos {
+  animation: mascote-pisca 5s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 55%;
+}
+
+.mascote-animado .mascote-joinha {
+  animation: mascote-joinha 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 85% 8%;
+}
+
+.mascote-animado .mascote-confete {
+  animation: mascote-confete 3.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 /* Rolagem horizontal do calendário sem barra visual pesada */
 .calendar-scroll {
   scrollbar-width: thin;
