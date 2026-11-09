@@ -79,6 +79,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      {/* Mascote de fundo do Início — visível apenas no tema do colégio */}
+      {pathname === "/" ? (
+        <div className="escola-bg escola-bg--home" aria-hidden="true">
+          <div className="escola-bg__overlay" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/mascote-cepk.svg" alt="" className="escola-bg__mascote" draggable={false} />
+        </div>
+      ) : null}{" "}
       {/* Barra lateral (desktop) */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-slate-200 bg-white lg:flex dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-between gap-2 px-4 py-5">
@@ -178,7 +186,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="lg:pl-64">
+      <main className="relative z-10 lg:pl-64">
         <div className="mx-auto w-full max-w-7xl px-4 pb-24 pt-5 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8">
           {children}
         </div>

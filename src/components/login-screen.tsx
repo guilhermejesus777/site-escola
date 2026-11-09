@@ -70,15 +70,8 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
-      {/* Mascote de fundo — visível apenas no tema do colégio */}
-      <div className="escola-bg" aria-hidden="true">
-        <div className="escola-bg__overlay" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/mascote-cepk.svg" alt="" className="escola-bg__mascote" draggable={false} />
-      </div>
-
-      <header className="relative z-10 flex items-center justify-between px-4 py-4 sm:px-8">
+    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
+      <header className="flex items-center justify-between px-4 py-4 sm:px-8">
         <Brand />
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
@@ -86,8 +79,21 @@ export function LoginScreen() {
         </div>
       </header>
 
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-10 pt-2 sm:px-6">
+      <main className="flex flex-1 items-center justify-center px-4 pb-10 pt-2 sm:px-6">
         <div className="w-full max-w-md">
+          {/* Foto do colégio — visível apenas no tema do colégio */}
+          <div className="escola-banner overflow-hidden rounded-2xl border border-slate-200 shadow-sm dark:border-slate-800">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/escola-cepk.svg"
+              alt="Entrada do Colégio Estadual Presidente Kennedy"
+              className="h-32 w-full object-cover sm:h-40"
+              draggable={false}
+            />
+            <p className="bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-800 dark:bg-slate-900 dark:text-slate-100">
+              Colégio Estadual Presidente Kennedy
+            </p>
+          </div>
           {role === null ? (
             <section className="animate-fade-in rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-800 dark:bg-slate-900">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
@@ -228,7 +234,7 @@ export function LoginScreen() {
         </div>
       </main>
 
-      <footer className="relative z-10 px-4 pb-6 text-center text-[11px] text-slate-400 dark:text-slate-600">
+      <footer className="px-4 pb-6 text-center text-[11px] text-slate-400 dark:text-slate-600">
         Escola Municipal Horizonte · Agenda Escolar
       </footer>
     </div>

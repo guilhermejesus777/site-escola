@@ -80,7 +80,17 @@ html[data-escola="on"] body {
   color: #e6efe9;
 }
 
-/* Mascote de fundo da tela inicial: só aparece no tema do colégio */
+/* Foto do colégio na tela de login: só aparece no tema do colégio */
+.escola-banner {
+  display: none;
+  margin-bottom: 1rem;
+}
+
+html[data-escola="on"] .escola-banner {
+  display: block;
+}
+
+/* Mascote de fundo da página inicial: só aparece no tema do colégio */
 .escola-bg {
   display: none;
 }
@@ -104,6 +114,14 @@ html[data-escola="on"] .escola-bg {
   filter: drop-shadow(0 24px 60px rgba(0, 0, 0, 0.7)) saturate(1.05);
 }
 
+/* Na página interna o mascote fica discreto para não atrapalhar a leitura */
+html[data-escola="on"] .escola-bg--home .escola-bg__mascote {
+  right: -8vw;
+  bottom: -12vh;
+  width: min(100vh, 920px);
+  opacity: 0.25;
+}
+
 .escola-bg__overlay {
   position: absolute;
   inset: 0;
@@ -117,14 +135,8 @@ html[data-escola="on"] .escola-bg {
     );
 }
 
-@media (max-width: 640px) {
-  .escola-bg__mascote {
-    right: 50%;
-    bottom: -2vh;
-    width: 125vw;
-    opacity: 0.55;
-    transform: translateX(50%);
-  }
+html[data-escola="on"] .escola-bg--home .escola-bg__overlay {
+  background: radial-gradient(circle at 80% 20%, rgba(92, 197, 19, 0.08), transparent 55%);
 }
 
 /* Rolagem horizontal do calendário sem barra visual pesada */
