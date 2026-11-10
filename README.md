@@ -26,6 +26,8 @@ App web para a escola resolver dois problemas em um só lugar:
 | `/reservas` | Reservas | Calendário semanal por espaço, reserva em 2 cliques, cancelamento, bloqueios da coordenação e ocupação da semana. |
 | `/atividades` | Provas e atividades | Calendário mensal, lista de próximas entregas, detalhe com anexos e publicação de nova atividade. |
 | `/configuracoes` | Configurações | Painel da coordenação (somente professor): espaços, grade de horários, regras, permissões e limpeza dos dados. |
+| `/privacidade` | Política de Privacidade | Página pública (abre sem login) exigida pelo Google para publicar o login OAuth. |
+| `/termos` | Termos de Uso | Página pública (abre sem login) com as regras de uso do app. |
 
 ## Como rodar
 
