@@ -188,6 +188,34 @@ export async function getPasswordHash(email: string): Promise<string | null> {
   return result.rows[0]?.password_hash ?? null;
 }
 
+/**
+ * Cria a senha apenas se ainda não existir. Usado na ativação de primeiro
+ * acesso, para que ninguém sobrescreva a senha de outra pessoa.
+ */
+export async function createPasswordHashIfMissing(
+  email: string,
+  hash: string,
+): Promise<boolean> {
+  const normalized = normalizeEmail(email);
+
+  if (!HAS_DB) {
+    const map = memoryPasswords();
+    if (map.has(normalized)) return false;
+    map.set(normalized, { hash, updatedAt: new Date().toISOString() });
+    return true;
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query(
+    `INSERT INTO senhas (email, password_hash, updated_at)
+     VALUES ($1, $2, now())
+     ON CONFLICT (email) DO NOTHING`,
+    [normalized, hash],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
 export async function setPasswordHash(email: string, hash: string) {
   const normalized = normalizeEmail(email);
 

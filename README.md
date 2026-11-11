@@ -58,6 +58,13 @@ A tela de login aceita **e-mail + senha de acesso** e, abaixo, o botão do
   A tela tem um gerador de senha forte e permite copiar a senha para entregar ao
   aluno/professor. O hash **scrypt** fica salvo no banco (tabela `senhas`);
   ninguém consegue ler a senha original.
+- **Primeiro acesso (autoativação):** na tela de login, a pessoa clica em
+  **“Primeiro acesso? Criar a minha senha”** e entra com o Google. O Google
+  confirma que o e-mail é dela; se o e-mail estiver na lista e ainda não tiver
+  senha, aparece o formulário para criar a senha. A partir daí ela entra pelos
+  **dois jeitos** (e-mail + senha ou Google).
+- A ativação **nunca sobrescreve** uma senha existente (responde 409). Para
+  redefinir, a coordenação usa o painel.
 - Enquanto alguém não tiver senha individual, o login por senha mostra
   “E-mail ou senha de acesso incorretos. Se ainda não tem senha, fale com a
   coordenação.” O login com Google continua funcionando.
@@ -102,6 +109,9 @@ professores em `REGISTERED_TEACHERS` e alunos em `REGISTERED_STUDENTS`.
 - **Senha do app:** cada usuário tem a própria senha, salva como hash **scrypt**
   no banco (tabela `senhas`) e verificada no servidor. A senha mestra
   (`APP_LOGIN_PASSWORD_HASH`) é só um bootstrap de professor.
+- **Autoativação segura:** a senha própria só pode ser criada depois que o
+  **Google confirma o e-mail**; a rota só cria se ainda não existir senha e tem
+  limite de tentativas. Ninguém consegue cadastrar o e-mail de outra pessoa.
 - **Força bruta:** limite de 8 tentativas por IP a cada 10 min e 12 por e-mail a
   cada 15 min (resposta HTTP 429).
 - **CSRF:** rotas de escrita exigem `Content-Type: application/json` e a mesma

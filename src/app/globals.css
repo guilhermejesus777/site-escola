@@ -281,6 +281,25 @@ html[data-escola="on"] .escola-bg--home .escola-bg__overlay {
   );
 }
 
+/* ==========================================================================
+   Tema do colégio — textos claros
+   O tema troca as variáveis slate-100/200/300 por superfícies escuras. Como
+   as mesmas variáveis também são usadas em textos do modo escuro, os títulos
+   e campos ficavam escuros demais. Estas regras devolvem a cor clara apenas
+   para as classes de texto, mantendo os fundos escuros.
+   ========================================================================== */
+html[data-escola="on"] .dark\:text-slate-100 {
+  color: #f8fafc;
+}
+
+html[data-escola="on"] .dark\:text-slate-200 {
+  color: #e2e8f0;
+}
+
+html[data-escola="on"] .dark\:text-slate-300 {
+  color: #cbd5e1;
+}
+
 @keyframes slide-up {
   from {
     opacity: 0;

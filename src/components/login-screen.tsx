@@ -15,6 +15,7 @@ import {
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SchoolThemeToggle } from "@/components/school-theme-toggle";
+import { Button, Modal } from "@/components/ui";
 import { GOOGLE_CLIENT_ID } from "@/lib/google";
 import { useStore } from "@/lib/store";
 import type { UserRole } from "@/types";
@@ -63,11 +64,27 @@ export function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [activation, setActivation] = useState(false);
+  const [activationUser, setActivationUser] = useState<{
+    email: string;
+    name: string;
+  } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [activationError, setActivationError] = useState<string | null>(null);
+  const [savingPassword, setSavingPassword] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
+  const activationRef = useRef(false);
+
+  useEffect(() => {
+    activationRef.current = activation;
+  }, [activation]);
 
   function chooseRole(next: UserRole) {
     setRole(next);
     setError(null);
+    setActivation(false);
   }
 
   async function handlePasswordLogin(event: FormEvent<HTMLFormElement>) {
@@ -108,6 +125,65 @@ export function LoginScreen() {
     }
   }
 
+  async function saveMyPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!activationUser || !role) return;
+
+    if (newPassword.length < 8) {
+      setActivationError("A senha precisa ter pelo menos 8 caracteres.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setActivationError("As duas senhas não são iguais.");
+      return;
+    }
+
+    setSavingPassword(true);
+    setActivationError(null);
+    try {
+      const response = await fetch("/api/usuarios/minha-senha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: newPassword }),
+      });
+      const data = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !data?.ok) {
+        setActivationError(data?.error ?? "Não foi possível criar a sua senha.");
+        return;
+      }
+
+      const user = activationUser;
+      setActivationUser(null);
+      setNewPassword("");
+      setConfirmPassword("");
+      setActivation(false);
+      if (!login(user.email, role, user.name)) {
+        setError("Senha criada, mas não foi possível entrar. Tente novamente.");
+      }
+    } catch {
+      setActivationError("Falha de conexão. Tente novamente.");
+    } finally {
+      setSavingPassword(false);
+    }
+  }
+
+  function skipActivation() {
+    if (!activationUser || !role) return;
+    const user = activationUser;
+    setActivationUser(null);
+    setNewPassword("");
+    setConfirmPassword("");
+    setActivation(false);
+    if (!login(user.email, role, user.name)) {
+      setError("Não foi possível entrar. Confira se o e-mail está cadastrado.");
+    }
+  }
+
   useEffect(() => {
     if (!role || !GOOGLE_CLIENT_ID) return;
     const currentRole = role;
@@ -145,6 +221,37 @@ export function LoginScreen() {
               setError(data.error ?? "Não foi possível entrar com essa conta Google.");
               return;
             }
+
+            // Ativação de primeiro acesso: o Google confirmou o e-mail.
+            // Antes de entrar, a pessoa cria a própria senha de acesso.
+            if (activationRef.current) {
+              try {
+                const statusResponse = await fetch("/api/usuarios/minha-senha", {
+                  cache: "no-store",
+                });
+                const status = (await statusResponse.json().catch(() => null)) as {
+                  hasPassword?: boolean;
+                } | null;
+
+                if (statusResponse.ok) {
+                  if (status?.hasPassword) {
+                    setActivation(false);
+                    setError(
+                      "Este e-mail já tem senha de acesso. Você entrou pelo Google; para trocar a senha, fale com a coordenação.",
+                    );
+                  } else {
+                    setActivationUser({
+                      email: data.email,
+                      name: data.name ?? data.email,
+                    });
+                    return;
+                  }
+                }
+              } catch {
+                // Sem resposta do servidor: segue com o login normal.
+              }
+            }
+
             if (!login(data.email, currentRole, data.name)) {
               setError("Não foi possível entrar. Confira se o e-mail está cadastrado.");
             }
@@ -279,6 +386,7 @@ export function LoginScreen() {
                 onClick={() => {
                   setRole(null);
                   setError(null);
+                  setActivation(false);
                 }}
                 className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 transition hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
               >
@@ -392,6 +500,36 @@ export function LoginScreen() {
                 <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
               </div>
 
+              {activation ? (
+                <div className="mb-3 flex items-start gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2.5 text-[11px] leading-relaxed text-indigo-800 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-200">
+                  <IconAlert width={14} height={14} className="mt-0.5 shrink-0" />
+                  <span className="flex-1">
+                    <strong className="font-semibold">Primeiro acesso:</strong> entre com o Google
+                    para confirmar seu e-mail. Depois você cria a sua senha e passa a entrar dos
+                    dois jeitos.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActivation(false)}
+                    className="shrink-0 font-semibold underline underline-offset-2"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActivation(true);
+                    setError(null);
+                  }}
+                  className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-[11px] font-semibold text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50/50 hover:text-indigo-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-indigo-400/40 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
+                >
+                  <IconLock width={13} height={13} />
+                  Primeiro acesso? Criar a minha senha
+                </button>
+              )}
+
               <p className="mb-3 text-center text-[11px] font-medium text-slate-500 dark:text-slate-400">
                 Entrar com a conta Google da escola
               </p>
@@ -433,6 +571,92 @@ export function LoginScreen() {
       <footer className="px-4 pb-6 text-center text-[11px] text-slate-400 dark:text-slate-600">
         Colégio Estadual Presidente Kennedy · Agenda Escolar
       </footer>
+
+      <Modal
+        open={activationUser !== null}
+        onClose={skipActivation}
+        title="Crie a sua senha de acesso"
+        description={activationUser ? activationUser.email : undefined}
+        footer={
+          <>
+            <Button variant="secondary" onClick={skipActivation}>
+              Agora não
+            </Button>
+            <Button
+              type="submit"
+              form="form-primeiro-acesso"
+              disabled={savingPassword || newPassword.length < 8}
+            >
+              {savingPassword ? "Criando…" : "Criar senha"}
+            </Button>
+          </>
+        }
+      >
+        <form id="form-primeiro-acesso" onSubmit={saveMyPassword} className="space-y-3">
+          <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+            O Google confirmou que este e-mail é seu. Crie uma senha para também entrar sem o
+            Google. Ela é <strong className="font-semibold">diferente da senha do Google</strong>.
+          </p>
+
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              Nova senha de acesso
+            </span>
+            <span className="relative block">
+              <IconLock
+                width={16}
+                height={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+              />
+              <input
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                autoComplete="new-password"
+                placeholder="Mínimo de 8 caracteres"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword((value) => !value)}
+                aria-label={showNewPassword ? "Esconder senha" : "Mostrar senha"}
+                className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              >
+                {showNewPassword ? (
+                  <IconEyeOff width={16} height={16} />
+                ) : (
+                  <IconEye width={16} height={16} />
+                )}
+              </button>
+            </span>
+          </label>
+
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              Repita a senha
+            </span>
+            <input
+              type={showNewPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              autoComplete="new-password"
+              placeholder="Digite a senha novamente"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+            />
+          </label>
+
+          {activationError ? (
+            <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[11px] font-medium text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+              <IconAlert width={14} height={14} className="mt-0.5 shrink-0" />
+              {activationError}
+            </div>
+          ) : null}
+
+          <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+            Se esquecer a senha depois, a coordenação pode definir outra no painel.
+          </p>
+        </form>
+      </Modal>
     </div>
   );
 }
