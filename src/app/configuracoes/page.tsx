@@ -16,7 +16,6 @@ import {
   IconX,
 } from "@/components/icons";
 import { Badge, Button, ConfirmDialog, Toast } from "@/components/ui";
-import { PasswordManager } from "@/components/password-manager";
 import { PwaSupport } from "@/components/pwa";
 import { SLOTS, SPACES } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
@@ -130,14 +129,11 @@ export default function ConfiguracoesPage() {
       <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10 px-4 py-3">
         <IconAlert width={16} height={16} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
         <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
-          <strong className="font-semibold">Painel da coordenação.</strong> As{" "}
-          <strong className="font-semibold">senhas de acesso já funcionam de verdade</strong> e
-          ficam salvas no servidor. Os demais ajustes desta tela ainda são uma prévia e não são
-          salvos.
+          <strong className="font-semibold">Prévia do painel administrativo.</strong> Nesta
+          demonstração os ajustes abaixo não são salvos de verdade — servem apenas para mostrar
+          como a coordenação vai operar o sistema.
         </p>
       </div>
-
-      <PasswordManager />
 
       <div className="grid gap-5 lg:grid-cols-2">
         {/* Espaços */}

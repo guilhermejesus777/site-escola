@@ -149,29 +149,6 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-/** Devolve apenas os e-mails com senha cadastrada e a data da última troca. */
-export async function listPasswordRecords(): Promise<
-  { email: string; updatedAt: string }[]
-> {
-  if (!HAS_DB) {
-    return Array.from(memoryPasswords(), ([email, value]) => ({
-      email,
-      updatedAt: value.updatedAt,
-    }));
-  }
-
-  const pool = getPool();
-  await ensureSchema();
-  const result = await pool.query<{ email: string; updated_at: Date | string }>(
-    "SELECT email, updated_at FROM senhas ORDER BY email",
-  );
-  return result.rows.map((row) => ({
-    email: row.email,
-    updatedAt:
-      row.updated_at instanceof Date ? row.updated_at.toISOString() : String(row.updated_at),
-  }));
-}
-
 export async function getPasswordHash(email: string): Promise<string | null> {
   const normalized = normalizeEmail(email);
 
@@ -216,37 +193,4 @@ export async function createPasswordHashIfMissing(
   return (result.rowCount ?? 0) > 0;
 }
 
-export async function setPasswordHash(email: string, hash: string) {
-  const normalized = normalizeEmail(email);
 
-  if (!HAS_DB) {
-    memoryPasswords().set(normalized, {
-      hash,
-      updatedAt: new Date().toISOString(),
-    });
-    return;
-  }
-
-  const pool = getPool();
-  await ensureSchema();
-  await pool.query(
-    `INSERT INTO senhas (email, password_hash, updated_at)
-     VALUES ($1, $2, now())
-     ON CONFLICT (email)
-     DO UPDATE SET password_hash = EXCLUDED.password_hash, updated_at = now()`,
-    [normalized, hash],
-  );
-}
-
-export async function deletePasswordHash(email: string) {
-  const normalized = normalizeEmail(email);
-
-  if (!HAS_DB) {
-    memoryPasswords().delete(normalized);
-    return;
-  }
-
-  const pool = getPool();
-  await ensureSchema();
-  await pool.query("DELETE FROM senhas WHERE email = $1", [normalized]);
-}

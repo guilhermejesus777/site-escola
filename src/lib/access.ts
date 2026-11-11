@@ -78,25 +78,4 @@ export function nameFromEmail(email: string): string {
   return formatted || "Aluno";
 }
 
-export type RegisteredUser = {
-  email: string;
-  name: string;
-  role: "professor" | "aluno";
-};
 
-/** Todos os usuários que podem entrar no app (professores e alunos). */
-export function listRegisteredUsers(): RegisteredUser[] {
-  const teachers: RegisteredUser[] = REGISTERED_TEACHERS.map((teacher) => ({
-    email: teacher.email,
-    name: teacher.name,
-    role: "professor",
-  }));
-
-  const students: RegisteredUser[] = REGISTERED_STUDENTS.map((email) => ({
-    email,
-    name: nameFromEmail(email),
-    role: "aluno",
-  }));
-
-  return [...teachers, ...students].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-}

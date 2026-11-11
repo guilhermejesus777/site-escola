@@ -25,7 +25,7 @@ App web para a escola resolver dois problemas em um só lugar:
 | `/` (logado) | Início | Próxima reserva, indicadores, agenda da escola e próximas entregas. |
 | `/reservas` | Reservas | Calendário semanal por espaço, reserva em 2 cliques, cancelamento, bloqueios da coordenação e ocupação da semana. |
 | `/atividades` | Provas e atividades | Calendário mensal, lista de próximas entregas, detalhe com anexos e publicação de nova atividade. |
-| `/configuracoes` | Configurações | Painel da coordenação (somente professor): espaços, grade de horários, regras, permissões, **senhas de acesso** e limpeza dos dados. |
+| `/configuracoes` | Configurações | Painel da coordenação (somente professor): espaços, grade de horários, regras, permissões e limpeza dos dados. |
 | `/privacidade` | Política de Privacidade | Página pública (abre sem login) exigida pelo Google para publicar o login OAuth. |
 | `/termos` | Termos de Uso | Página pública (abre sem login) com as regras de uso do app. |
 
@@ -51,20 +51,18 @@ npm start       # serve o build
 ### Senhas de acesso (individuais)
 
 A tela de login aceita **e-mail + senha de acesso** e, abaixo, o botão do
-**Google**. A senha de acesso é definida pela coordenação, **uma por pessoa**, e
-**não é a senha da conta Google** — ela serve apenas para entrar neste app.
+**Google**. Cada pessoa cria a própria senha de acesso, e ela
+**não é a senha da conta Google** — serve apenas para entrar neste app.
 
-- A coordenação define e troca as senhas em **Configurações → Senhas de acesso**.
-  A tela tem um gerador de senha forte e permite copiar a senha para entregar ao
-  aluno/professor. O hash **scrypt** fica salvo no banco (tabela `senhas`);
-  ninguém consegue ler a senha original.
 - **Primeiro acesso (autoativação):** na tela de login, a pessoa clica em
   **“Primeiro acesso? Criar a minha senha”** e entra com o Google. O Google
   confirma que o e-mail é dela; se o e-mail estiver na lista e ainda não tiver
   senha, aparece o formulário para criar a senha. A partir daí ela entra pelos
   **dois jeitos** (e-mail + senha ou Google).
-- A ativação **nunca sobrescreve** uma senha existente (responde 409). Para
-  redefinir, a coordenação usa o painel.
+- O hash **scrypt** fica salvo no banco (tabela `senhas`); ninguém consegue ler
+  a senha original.
+- A ativação **nunca sobrescreve** uma senha existente (responde 409). Quem
+  esquecer a senha pode entrar normalmente pelo **Google**.
 - Enquanto alguém não tiver senha individual, o login por senha mostra
   “E-mail ou senha de acesso incorretos. Se ainda não tem senha, fale com a
   coordenação.” O login com Google continua funcionando.
@@ -142,8 +140,8 @@ banco (o app já está preparado para isso):
 
 ## O que já funciona
 
-- **Login em duas etapas com e-mail e senha:** primeiro escolha **Aluno** ou **Professor**, depois informe o e-mail e a **senha individual** definida pela coordenação. O servidor verifica o hash scrypt e libera somente os e-mails cadastrados em `src/lib/access.ts`. O botão **Google** fica logo abaixo, como alternativa. A sessão fica em um cookie HttpOnly.
-- **Senhas individuais:** em **Configurações → Senhas de acesso**, o professor vê todos os alunos e professores, define/troca/remove a senha de cada um e copia a senha gerada para entregar. O status “Com senha / Sem senha” aparece na lista.
+- **Login em duas etapas com e-mail e senha:** primeiro escolha **Aluno** ou **Professor**, depois informe o e-mail e a **senha individual** criada pela própria pessoa no primeiro acesso. O servidor verifica o hash scrypt e libera somente os e-mails cadastrados em `src/lib/access.ts`. O botão **Google** fica logo abaixo, como alternativa. A sessão fica em um cookie HttpOnly.
+- **Autoativação de senha:** pelo botão **“Primeiro acesso? Criar a minha senha”**, a pessoa confirma o e-mail pelo Google e cria a própria senha. Depois pode entrar com e-mail + senha ou com o Google.
 - **Permissões por perfil:** professores podem reservar espaços, cancelar reservas, publicar e excluir atividades e abrir as configurações; alunos têm acesso somente leitura e não veem Configurações.
 - **App começa vazio:** sem reservas, atividades ou bloqueios de exemplo. Tudo o que aparece é criado pelos usuários.
 - Reserva automática de horário livre com **prevenção de conflito** (o horário fica indisponível na hora).
