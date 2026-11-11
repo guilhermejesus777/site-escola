@@ -48,10 +48,27 @@ npm run build   # build de produção
 npm start       # serve o build
 ```
 
-### Login com Google (obrigatório)
+### Senha de acesso do app
 
-O app não recebe senhas. O aluno/professor entra com a conta Google da escola e o
-Google faz a verificação da senha.
+A tela de login aceita **e-mail + senha de acesso** e, abaixo, o botão do
+**Google**. A senha de acesso é definida pela coordenação e **não é a senha da
+conta Google** — ela serve apenas para entrar neste app.
+
+- Sem configuração, a senha padrão é `cepk2026` (pública, apenas para testes).
+- Para trocar com segurança, gere um hash e configure no Render:
+  ```bash
+  npm run senha:hash -- "sua-senha-forte"
+  ```
+  Copie a linha `APP_LOGIN_PASSWORD_HASH="scrypt$..."` para o `.env.local` e para
+  as variáveis de ambiente do Render. A senha em texto puro nunca fica salva.
+- A sessão fica em um cookie **HttpOnly assinado** pelo servidor (8 horas). O
+  navegador não guarda o perfil, então não dá para "virar professor" editando o
+  `localStorage`.
+
+### Login com Google (opcional)
+
+Se o Google estiver configurado, o aluno/professor também pode entrar com a
+conta Google da escola; nesse caso o Google faz a verificação da senha.
 
 1. Crie um projeto em <https://console.cloud.google.com>;
 2. Ative a **Google Identity Services** (também chamada de "Sign in with Google");
@@ -66,6 +83,26 @@ Google faz a verificação da senha.
 Sem essa variável, a tela de login mostra um aviso de configuração e ninguém
 consegue entrar. Os e-mails autorizados ficam em `src/lib/access.ts`:
 professores em `REGISTERED_TEACHERS` e alunos em `REGISTERED_STUDENTS`.
+
+## Segurança
+
+- **Sessão no servidor:** cookie `cepk_sessao` **HttpOnly**, `SameSite=Lax`, `Secure`
+  em produção e assinado com HMAC-SHA256. Expira em 8 horas.
+- **Senha do app:** verificada no servidor; aceita hash **scrypt**
+  (`APP_LOGIN_PASSWORD_HASH`) e comparação em tempo constante.
+- **Força bruta:** limite de 8 tentativas por IP a cada 10 min e 12 por e-mail a
+  cada 15 min (resposta HTTP 429).
+- **CSRF:** rotas de escrita exigem `Content-Type: application/json` e a mesma
+  origem do site.
+- **Permissões no servidor:** `/api/dados` exige sessão; criar, excluir e limpar
+  dados é permitido só para professor. Aluno é somente leitura.
+- **Lista de acesso revalidada** a cada requisição: se um e-mail sair da lista,
+  a sessão deixa de valer na hora.
+- **Cabeçalhos de segurança:** CSP, HSTS, `X-Frame-Options`, `nosniff`,
+  `Referrer-Policy`, `Permissions-Policy` e COOP.
+- **O que configurar em produção:** `SESSION_SECRET` (32+ caracteres aleatórios)
+  e `APP_LOGIN_PASSWORD_HASH`. Sem `SESSION_SECRET`, a chave é derivada da
+  `DATABASE_URL` (secreta), então as sessões continuam válidas após reinícios.
 
 ### Banco de dados (PostgreSQL no Neon)
 
@@ -83,7 +120,7 @@ banco (o app já está preparado para isso):
 
 ## O que já funciona
 
-- **Login com Google em duas etapas:** primeiro escolha **Aluno** ou **Professor**, depois entre com a conta Google da escola. A senha é digitada no Google e o servidor valida o token; somente os e-mails cadastrados em `src/lib/access.ts` podem entrar. A sessão fica salva no navegador.
+- **Login em duas etapas com e-mail e senha:** primeiro escolha **Aluno** ou **Professor**, depois informe o e-mail e a senha de acesso do app (definida pela coordenação). O servidor valida a senha e libera somente os e-mails cadastrados em `src/lib/access.ts`. O botão **Google** fica logo abaixo, como alternativa. A sessão fica salva no navegador.
 - **Permissões por perfil:** professores podem reservar espaços, cancelar reservas, publicar e excluir atividades e abrir as configurações; alunos têm acesso somente leitura e não veem Configurações.
 - **App começa vazio:** sem reservas, atividades ou bloqueios de exemplo. Tudo o que aparece é criado pelos usuários.
 - Reserva automática de horário livre com **prevenção de conflito** (o horário fica indisponível na hora).
@@ -100,7 +137,7 @@ banco (o app já está preparado para isso):
 
 ## O que é simulado
 
-- **Login e permissões:** o acesso é feito pelo **Google** e a senha nunca passa por este site. O servidor valida o token do Google e libera o perfil de **professor** apenas para os e-mails de `REGISTERED_TEACHERS` e o de **aluno** apenas para os e-mails de `REGISTERED_STUDENTS`, ambos em `src/lib/access.ts`. Os demais recebem a mensagem para falar com a coordenação. O nome exibido vem da conta Google.
+- **Login e permissões:** o acesso pode ser feito com **e-mail + senha de acesso do app** ou com a **conta Google**. O servidor valida a credencial e libera o perfil de **professor** apenas para os e-mails de `REGISTERED_TEACHERS` e o de **aluno** apenas para os e-mails de `REGISTERED_STUDENTS`, ambos em `src/lib/access.ts`. Os demais recebem a mensagem para falar com a coordenação. A senha real da conta Google nunca passa pelo app.
 - **Dados:** não há dados de exemplo. Reservas e atividades são criadas pelos usuários e ficam apenas neste navegador.
 - **Upload:** os arquivos não são enviados; só o nome e o tamanho são guardados.
 - **Configurações:** os ajustes da tela de configurações não são salvos (só a limpeza dos dados funciona).
@@ -127,7 +164,7 @@ src/
 ├── components/
 │   ├── app-shell.tsx       # navegação lateral/inferior e perfil
 │   ├── auth-gate.tsx       # alterna login e app conforme a sessão
-│   ├── login-screen.tsx    # login em duas etapas (perfil + conta Google)
+│   ├── login-screen.tsx    # login em duas etapas (perfil + e-mail/senha e Google)
 │   ├── icons.tsx           # ícones SVG
 │   └── ui.tsx              # botões, modal, badges, toast…
 ├── lib/

@@ -24,6 +24,7 @@ import type {
 
 const STORAGE_KEY = "site-escola:prototipo:v2";
 const SESSION_KEY = "site-escola:sessao:v1";
+const SESSION_EXPIRED_EVENT = "site-escola:sessao-expirada";
 
 type BookInput = Omit<Reservation, "id" | "createdAt">;
 type ActivityInput = Omit<Activity, "id" | "createdAt">;
@@ -43,15 +44,22 @@ type StoreValue = DataState & {
 
   const StoreContext = createContext<StoreValue | null>(null);
 
-/** Envia uma operação ao banco (fire-and-forget; falhas são ignoradas). */
+/** Envia uma operação ao banco. Se a sessão expirar, avisa o app. */
 function sendToDb(op: string, extra?: { record?: unknown; id?: string }) {
-  void fetch("/api/dados", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ op, ...extra }),
-  }).catch(() => {
-    // Sem banco/servidor: o estado local continua válido.
-  });
+  void (async () => {
+    try {
+      const response = await fetch("/api/dados", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ op, ...extra }),
+      });
+      if (response.status === 401) {
+        window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+      }
+    } catch {
+      // Sem banco/servidor: o estado local continua válido.
+    }
+  })();
 }
 
 function makeId(prefix: string): string {
@@ -91,59 +99,124 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [ready, setReady] = useState(false);
 
-  // Carrega os dados salvos só no navegador — evita divergência entre
-  // servidor e cliente na primeira renderização.
+  // A sessão oficial fica em um cookie HttpOnly assinado pelo servidor.
+  // O localStorage não guarda mais o perfil, então não dá para falsificar
+  // "professor" editando o navegador.
   useEffect(() => {
-    try {
-      const rawSession = window.localStorage.getItem(SESSION_KEY);
-      if (rawSession) {
-        const parsedSession: unknown = JSON.parse(rawSession);
-        if (isSessionUser(parsedSession)) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect -- carga única da sessão após a hidratação
-          setUser(parsedSession);
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        if (response.ok) {
+          const payload = (await response.json()) as { user?: unknown };
+          if (!cancelled && isSessionUser(payload.user)) {
+            setUser(payload.user);
+          }
+        } else {
+          try {
+            window.localStorage.removeItem(SESSION_KEY);
+          } catch {
+            // Sem armazenamento: nada a limpar.
+          }
         }
+      } catch {
+        // Sem servidor: segue sem sessão.
       }
 
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<DataState>;
-        if (Array.isArray(parsed.reservations) && Array.isArray(parsed.activities)) {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw && !cancelled) {
+          const parsed = JSON.parse(raw) as Partial<DataState>;
+          if (Array.isArray(parsed.reservations) && Array.isArray(parsed.activities)) {
+            setState({
+              reservations: parsed.reservations,
+              blocks: Array.isArray(parsed.blocks) ? parsed.blocks : [],
+              activities: parsed.activities,
+            });
+          }
+        }
+
+        // Banco de dados (Neon/PostgreSQL): sobrescreve o cache local com o
+        // estado oficial do banco. Se indisponível, segue o modo local.
+        const response = await fetch("/api/dados", { cache: "no-store" });
+        if (response.status === 401) {
+          window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+        } else if (response.ok) {
+          const payload = (await response.json()) as {
+            ok: boolean;
+            data?: Partial<DataState>;
+          };
+          if (!cancelled && payload.ok && payload.data) {
+            const db = payload.data;
+            setState({
+              reservations: Array.isArray(db.reservations) ? db.reservations : [],
+              blocks: Array.isArray(db.blocks) ? db.blocks : [],
+              activities: Array.isArray(db.activities) ? db.activities : [],
+            });
+          }
+        }
+      } catch {
+        // Sem servidor/banco: o modo local (localStorage) continua valendo.
+      }
+
+      if (!cancelled) setReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Se qualquer chamada ao servidor detectar sessão expirada, volta ao login.
+  useEffect(() => {
+    function handleExpired() {
+      setUser(null);
+      try {
+        window.localStorage.removeItem(SESSION_KEY);
+      } catch {
+        // Sem armazenamento: nada a limpar.
+      }
+    }
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleExpired);
+  }, []);
+
+  // Depois de entrar, busca a versão oficial dos dados no banco.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/dados", { cache: "no-store" });
+        if (response.status === 401) {
+          window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+          return;
+        }
+        if (!response.ok) return;
+        const payload = (await response.json()) as {
+          ok: boolean;
+          data?: Partial<DataState>;
+        };
+        if (!cancelled && payload.ok && payload.data) {
+          const db = payload.data;
           setState({
-            reservations: parsed.reservations,
-            blocks: Array.isArray(parsed.blocks) ? parsed.blocks : [],
-            activities: parsed.activities,
+            reservations: Array.isArray(db.reservations) ? db.reservations : [],
+            blocks: Array.isArray(db.blocks) ? db.blocks : [],
+            activities: Array.isArray(db.activities) ? db.activities : [],
           });
         }
+      } catch {
+        // Sem servidor/banco: mantém o cache local.
       }
+    })();
 
-      // Banco de dados (Neon/PostgreSQL): sobrescreve o cache local com o
-      // estado oficial do banco. Se indisponível, segue o modo local.
-      void (async () => {
-        try {
-          const response = await fetch("/api/dados", { cache: "no-store" });
-          if (response.ok) {
-            const payload = (await response.json()) as {
-              ok: boolean;
-              data?: Partial<DataState>;
-            };
-            if (payload.ok && payload.data) {
-              const db = payload.data;
-              setState({
-                reservations: Array.isArray(db.reservations) ? db.reservations : [],
-                blocks: Array.isArray(db.blocks) ? db.blocks : [],
-                activities: Array.isArray(db.activities) ? db.activities : [],
-              });
-            }
-          }
-        } catch {
-          // Sem servidor/banco: o modo local (localStorage) continua valendo.
-        }
-      })();
-    } catch {
-      // Se o armazenamento estiver indisponível, seguimos com os dados vazios.
-    }
-    setReady(true);
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!ready) return;
@@ -168,7 +241,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
     setUser(nextUser);
     try {
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(nextUser));
+      window.localStorage.removeItem(SESSION_KEY);
     } catch {
       // Sem armazenamento: a sessão vale só para esta aba.
     }
@@ -182,6 +255,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch {
       // Sem armazenamento: nada a limpar.
     }
+    void fetch("/api/auth/logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    }).catch(() => {
+      // Sem servidor: a sessão local já foi encerrada.
+    });
   }, []);
 
   const getReservation = useCallback(

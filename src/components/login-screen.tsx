@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Brand } from "@/components/app-shell";
 import {
   IconAlert,
   IconArrowRight,
   IconChevronLeft,
+  IconEye,
+  IconEyeOff,
   IconGraduationCap,
+  IconLock,
+  IconMail,
   IconPresentation,
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -55,11 +59,53 @@ export function LoginScreen() {
   const [role, setRole] = useState<UserRole | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
 
   function chooseRole(next: UserRole) {
     setRole(next);
     setError(null);
+  }
+
+  async function handlePasswordLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!role) return;
+
+    setError(null);
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/senha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, role }),
+      });
+      const data = (await response.json().catch(() => null)) as {
+        email?: string;
+        name?: string;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !data?.email) {
+        setError(
+          data?.error ??
+            (response.status === 404
+              ? "O servidor não encontrou a rota de login. Atualize a página e tente de novo."
+              : "Não foi possível entrar com esse e-mail e senha."),
+        );
+        return;
+      }
+
+      if (!login(data.email, role, data.name)) {
+        setError("Não foi possível entrar. Confira os dados com a coordenação.");
+      }
+    } catch {
+      setError("Falha de conexão. Verifique a internet e tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   useEffect(() => {
@@ -184,7 +230,7 @@ export function LoginScreen() {
                 Como você vai acessar?
               </h1>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                Escolha o seu perfil. O acesso é feito com a sua conta Google da escola.
+                Escolha o seu perfil para entrar com e-mail e senha ou com a conta Google.
               </p>
 
               <div className="mt-5 space-y-3">
@@ -222,8 +268,8 @@ export function LoginScreen() {
               </div>
 
               <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-                O acesso usa a sua conta Google. A senha é digitada no Google e não passa por este
-                site.
+                Você pode entrar com a senha de acesso fornecida pela coordenação ou com a sua conta
+                Google da escola.
               </p>
             </section>
           ) : (
@@ -261,12 +307,97 @@ export function LoginScreen() {
 
               <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                 {role === "professor"
-                  ? "Entre com a conta Google cadastrada pela coordenação."
-                  : "Entre com a sua conta Google da escola para acessar a agenda."}
+                  ? "Entre com o e-mail e a senha de acesso cadastrados pela coordenação."
+                  : "Entre com o seu e-mail e a senha de acesso fornecida pela escola."}
+              </p>
+
+              <form onSubmit={handlePasswordLogin} className="mt-5 space-y-3" noValidate>
+                <label className="block">
+                  <span className="mb-1.5 block text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                    E-mail
+                  </span>
+                  <span className="relative block">
+                    <IconMail
+                      width={16}
+                      height={16}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+                    />
+                    <input
+                      type="email"
+                      required
+                      autoComplete="username"
+                      inputMode="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="seu.email@escola.pr.gov.br"
+                      className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+                    />
+                  </span>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                    Senha de acesso
+                  </span>
+                  <span className="relative block">
+                    <IconLock
+                      width={16}
+                      height={16}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+                    />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      placeholder="Digite a sua senha de acesso"
+                      className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-10 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                      aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
+                      className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    >
+                      {showPassword ? (
+                        <IconEyeOff width={16} height={16} />
+                      ) : (
+                        <IconEye width={16} height={16} />
+                      )}
+                    </button>
+                  </span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={submitting || loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-indigo-600 hover:to-violet-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {submitting ? "Entrando..." : "Entrar"}
+                  {!submitting ? <IconArrowRight width={16} height={16} /> : null}
+                </button>
+
+                <p className="text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
+                  Esqueceu a senha? Fale com a coordenação.
+                  <br />A senha de acesso não é a mesma da conta Google.
+                </p>
+              </form>
+
+              <div className="my-5 flex items-center gap-3">
+                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  ou
+                </span>
+                <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+              </div>
+
+              <p className="mb-3 text-center text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                Entrar com a conta Google da escola
               </p>
 
               {GOOGLE_CLIENT_ID ? (
-                <div className="mt-6 flex flex-col items-center">
+                <div className="flex flex-col items-center">
                   <div ref={googleButtonRef} className="flex min-h-11 justify-center" />
                   {loading ? (
                     <p className="mt-3 text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -274,11 +405,11 @@ export function LoginScreen() {
                     </p>
                   ) : null}
                   <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-                    Sua senha é digitada no Google, nunca neste site.
+                    Sua senha do Google é digitada no Google, nunca neste site.
                   </p>
                 </div>
               ) : (
-                <div className="mt-5 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-[11px] leading-relaxed text-amber-800 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200">
+                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 text-[11px] leading-relaxed text-amber-800 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200">
                   <IconAlert width={15} height={15} className="mt-0.5 shrink-0" />
                   <span>
                     O login com Google ainda não foi configurado. A coordenação precisa definir a
@@ -300,7 +431,7 @@ export function LoginScreen() {
       </main>
 
       <footer className="px-4 pb-6 text-center text-[11px] text-slate-400 dark:text-slate-600">
-        Escola Municipal Horizonte · Agenda Escolar
+        Colégio Estadual Presidente Kennedy · Agenda Escolar
       </footer>
     </div>
   );
