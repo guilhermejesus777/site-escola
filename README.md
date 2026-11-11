@@ -54,7 +54,11 @@ A tela de login aceita **e-mail + senha de acesso** e, abaixo, o botão do
 **Google**. A senha de acesso é definida pela coordenação e **não é a senha da
 conta Google** — ela serve apenas para entrar neste app.
 
-- Sem configuração, a senha padrão é `cepk2026` (pública, apenas para testes).
+- No **desenvolvimento**, sem configuração, a senha padrão é `cepk2026`
+  (pública, apenas para testes).
+- **Em produção (Render) a senha padrão não é aceita**: é obrigatório configurar
+  `APP_LOGIN_PASSWORD_HASH` (ou `APP_LOGIN_PASSWORD`). Sem isso, o login por
+  senha mostra um aviso e só o Google funciona.
 - Para trocar com segurança, gere um hash e configure no Render:
   ```bash
   npm run senha:hash -- "sua-senha-forte"

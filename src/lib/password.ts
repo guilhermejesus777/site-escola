@@ -30,10 +30,11 @@ function verifyScrypt(password: string, stored: string): boolean {
   return timingSafeEqual(expected, actual);
 }
 
-export function configuredPasswordDescription(): "hash" | "plain" | "default" {
-  if (process.env.APP_LOGIN_PASSWORD_HASH?.trim()) return "hash";
-  if (process.env.APP_LOGIN_PASSWORD?.trim()) return "plain";
-  return "default";
+export function isAppPasswordConfigured(): boolean {
+  return Boolean(
+    process.env.APP_LOGIN_PASSWORD_HASH?.trim() ||
+      process.env.APP_LOGIN_PASSWORD?.trim(),
+  );
 }
 
 export function verifyAppPassword(password: string): boolean {
@@ -41,5 +42,11 @@ export function verifyAppPassword(password: string): boolean {
   if (hash) return verifyScrypt(password, hash);
 
   const configured = process.env.APP_LOGIN_PASSWORD?.trim();
-  return safeEqual(password, configured || DEFAULT_PASSWORD);
+  if (configured) return safeEqual(password, configured);
+
+  // Em produção a senha padrão (pública) não é aceita: é preciso configurar
+  // APP_LOGIN_PASSWORD_HASH ou APP_LOGIN_PASSWORD no servidor.
+  if (process.env.NODE_ENV === "production") return false;
+
+  return safeEqual(password, DEFAULT_PASSWORD);
 }

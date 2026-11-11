@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { findRegisteredStudent, findRegisteredTeacher } from "@/lib/access";
 import { validateEmail } from "@/lib/email";
-import { verifyAppPassword } from "@/lib/password";
+import { isAppPasswordConfigured, verifyAppPassword } from "@/lib/password";
 import { clientIp, enforceLoginRateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { noStoreHeaders, requireSameOrigin } from "@/lib/security";
 import { createSessionToken, sessionCookie } from "@/lib/session";
@@ -51,6 +51,16 @@ export async function POST(request: NextRequest) {
         status: 429,
         headers: { ...noStoreHeaders(), "Retry-After": String(limit.retryAfter) },
       },
+    );
+  }
+
+  if (process.env.NODE_ENV === "production" && !isAppPasswordConfigured()) {
+    return NextResponse.json(
+      {
+        error:
+          "A senha de acesso ainda não foi configurada pela coordenação. Use o login com Google ou peça a configuração.",
+      },
+      { status: 503, headers: noStoreHeaders() },
     );
   }
 
