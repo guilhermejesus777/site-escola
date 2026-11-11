@@ -9,6 +9,10 @@ export type RegisteredTeacher = {
   name: string;
 };
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export const REGISTERED_TEACHERS: RegisteredTeacher[] = [
   // Cadastro real da coordenação. Adicione novos professores no mesmo formato:
   // { email: "nome.sobrenome@escola.pr.gov.br", name: "Nome Sobrenome" },
@@ -51,4 +55,48 @@ export function findRegisteredStudent(email: string): string | undefined {
 
 export function isRegisteredStudent(email: string): boolean {
   return findRegisteredStudent(email) !== undefined;
+}
+
+/**
+ * Nome amigável a partir do e-mail (ex.: "joao.silva12" → "Joao Silva").
+ * Usado para alunos, que não têm um nome próprio cadastrado.
+ */
+export function nameFromEmail(email: string): string {
+  const local = normalizeEmail(email)
+    .split("@")[0]
+    .replace(/[._-]+/g, " ")
+    .replace(/[0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const formatted = local
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
+  return formatted || "Aluno";
+}
+
+export type RegisteredUser = {
+  email: string;
+  name: string;
+  role: "professor" | "aluno";
+};
+
+/** Todos os usuários que podem entrar no app (professores e alunos). */
+export function listRegisteredUsers(): RegisteredUser[] {
+  const teachers: RegisteredUser[] = REGISTERED_TEACHERS.map((teacher) => ({
+    email: teacher.email,
+    name: teacher.name,
+    role: "professor",
+  }));
+
+  const students: RegisteredUser[] = REGISTERED_STUDENTS.map((email) => ({
+    email,
+    name: nameFromEmail(email),
+    role: "aluno",
+  }));
+
+  return [...teachers, ...students].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }

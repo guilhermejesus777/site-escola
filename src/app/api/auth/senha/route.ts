@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { findRegisteredStudent, findRegisteredTeacher } from "@/lib/access";
+import { findRegisteredStudent, findRegisteredTeacher, nameFromEmail } from "@/lib/access";
+import { getPasswordHash } from "@/lib/db";
 import { validateEmail } from "@/lib/email";
-import { isAppPasswordConfigured, verifyAppPassword } from "@/lib/password";
+import {
+  isAppPasswordConfigured,
+  verifyAppPassword,
+  verifyPasswordHash,
+} from "@/lib/password";
 import { clientIp, enforceLoginRateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { noStoreHeaders, requireSameOrigin } from "@/lib/security";
 import { createSessionToken, sessionCookie } from "@/lib/session";
@@ -54,19 +59,43 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (process.env.NODE_ENV === "production" && !isAppPasswordConfigured()) {
+  // Senha individual cadastrada pela coordenação tem prioridade.
+  // Sem ela, a senha mestra do servidor serve apenas como bootstrap de
+  // professor; alunos precisam da senha individual.
+  let storedHash: string | null = null;
+  try {
+    storedHash = await getPasswordHash(result.email);
+  } catch {
     return NextResponse.json(
-      {
-        error:
-          "A senha de acesso ainda não foi configurada pela coordenação. Use o login com Google ou peça a configuração.",
-      },
+      { error: "Não foi possível verificar a senha agora. Tente novamente." },
       { status: 503, headers: noStoreHeaders() },
     );
   }
 
-  if (!verifyAppPassword(password)) {
+  let authenticated = false;
+
+  if (storedHash) {
+    authenticated = verifyPasswordHash(password, storedHash);
+  } else if (role === "professor") {
+    if (isAppPasswordConfigured() || process.env.NODE_ENV !== "production") {
+      authenticated = verifyAppPassword(password);
+    } else {
+      return NextResponse.json(
+        {
+          error:
+            "A senha de acesso ainda não foi configurada pela coordenação. Use o login com Google ou peça a configuração.",
+        },
+        { status: 503, headers: noStoreHeaders() },
+      );
+    }
+  }
+
+  if (!authenticated) {
     return NextResponse.json(
-      { error: "E-mail ou senha de acesso incorretos." },
+      {
+        error:
+          "E-mail ou senha de acesso incorretos. Se ainda não tem senha, fale com a coordenação.",
+      },
       { status: 401, headers: noStoreHeaders() },
     );
   }
@@ -85,27 +114,14 @@ export async function POST(request: NextRequest) {
     }
     name = teacher.name;
   } else {
-    const student = findRegisteredStudent(result.email);
-    if (!student) {
+    if (!findRegisteredStudent(result.email)) {
       return NextResponse.json(
         { error: "Este e-mail não está cadastrado como aluno. Fale com a coordenação." },
         { status: 403, headers: noStoreHeaders() },
       );
     }
-    const local = result.email
-      .split("@")[0]
-      .replace(/[._-]+/g, " ")
-      .replace(/[0-9]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    name =
-      local
-        .split(" ")
-        .filter(Boolean)
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(" ") || "Aluno";
+    name = nameFromEmail(result.email);
   }
-
   resetRateLimit(`senha:ip:${clientIp(request)}`);
   resetRateLimit(`senha:email:${result.email}`);
 

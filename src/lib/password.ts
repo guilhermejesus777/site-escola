@@ -30,6 +30,11 @@ function verifyScrypt(password: string, stored: string): boolean {
   return timingSafeEqual(expected, actual);
 }
 
+/** Verifica uma senha contra um hash scrypt individual salvo no banco. */
+export function verifyPasswordHash(password: string, stored: string): boolean {
+  return verifyScrypt(password, stored);
+}
+
 export function isAppPasswordConfigured(): boolean {
   return Boolean(
     process.env.APP_LOGIN_PASSWORD_HASH?.trim() ||

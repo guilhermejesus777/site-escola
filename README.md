@@ -21,11 +21,11 @@ App web para a escola resolver dois problemas em um só lugar:
 
 | Rota | Tela | O que faz |
 |---|---|---|
-| `/` | Login | Escolha entre **Aluno** e **Professor** e entre com a conta Google da escola. A senha é digitada no Google e nunca passa pelo site. A sessão fica salva no navegador. |
+| `/` | Login | Escolha entre **Aluno** e **Professor** e entre com **e-mail + senha de acesso** ou com a conta Google da escola. A senha do Google é digitada no Google e nunca passa pelo site. A sessão fica em um cookie HttpOnly. |
 | `/` (logado) | Início | Próxima reserva, indicadores, agenda da escola e próximas entregas. |
 | `/reservas` | Reservas | Calendário semanal por espaço, reserva em 2 cliques, cancelamento, bloqueios da coordenação e ocupação da semana. |
 | `/atividades` | Provas e atividades | Calendário mensal, lista de próximas entregas, detalhe com anexos e publicação de nova atividade. |
-| `/configuracoes` | Configurações | Painel da coordenação (somente professor): espaços, grade de horários, regras, permissões e limpeza dos dados. |
+| `/configuracoes` | Configurações | Painel da coordenação (somente professor): espaços, grade de horários, regras, permissões, **senhas de acesso** e limpeza dos dados. |
 | `/privacidade` | Política de Privacidade | Página pública (abre sem login) exigida pelo Google para publicar o login OAuth. |
 | `/termos` | Termos de Uso | Página pública (abre sem login) com as regras de uso do app. |
 
@@ -48,18 +48,25 @@ npm run build   # build de produção
 npm start       # serve o build
 ```
 
-### Senha de acesso do app
+### Senhas de acesso (individuais)
 
 A tela de login aceita **e-mail + senha de acesso** e, abaixo, o botão do
-**Google**. A senha de acesso é definida pela coordenação e **não é a senha da
-conta Google** — ela serve apenas para entrar neste app.
+**Google**. A senha de acesso é definida pela coordenação, **uma por pessoa**, e
+**não é a senha da conta Google** — ela serve apenas para entrar neste app.
 
-- No **desenvolvimento**, sem configuração, a senha padrão é `cepk2026`
-  (pública, apenas para testes).
-- **Em produção (Render) a senha padrão não é aceita**: é obrigatório configurar
-  `APP_LOGIN_PASSWORD_HASH` (ou `APP_LOGIN_PASSWORD`). Sem isso, o login por
-  senha mostra um aviso e só o Google funciona.
-- Para trocar com segurança, gere um hash e configure no Render:
+- A coordenação define e troca as senhas em **Configurações → Senhas de acesso**.
+  A tela tem um gerador de senha forte e permite copiar a senha para entregar ao
+  aluno/professor. O hash **scrypt** fica salvo no banco (tabela `senhas`);
+  ninguém consegue ler a senha original.
+- Enquanto alguém não tiver senha individual, o login por senha mostra
+  “E-mail ou senha de acesso incorretos. Se ainda não tem senha, fale com a
+  coordenação.” O login com Google continua funcionando.
+- A **senha mestra** (`APP_LOGIN_PASSWORD_HASH` / `APP_LOGIN_PASSWORD`) serve
+  apenas como *bootstrap* para professores **sem** senha individual. Ela não
+  sobrescreve a senha individual e não vale para alunos.
+- No **desenvolvimento**, sem configuração, a senha padrão `cepk2026` funciona
+  como bootstrap de professor (pública, apenas para testes).
+- Para configurar a senha mestra com segurança:
   ```bash
   npm run senha:hash -- "sua-senha-forte"
   ```
@@ -92,8 +99,9 @@ professores em `REGISTERED_TEACHERS` e alunos em `REGISTERED_STUDENTS`.
 
 - **Sessão no servidor:** cookie `cepk_sessao` **HttpOnly**, `SameSite=Lax`, `Secure`
   em produção e assinado com HMAC-SHA256. Expira em 8 horas.
-- **Senha do app:** verificada no servidor; aceita hash **scrypt**
-  (`APP_LOGIN_PASSWORD_HASH`) e comparação em tempo constante.
+- **Senha do app:** cada usuário tem a própria senha, salva como hash **scrypt**
+  no banco (tabela `senhas`) e verificada no servidor. A senha mestra
+  (`APP_LOGIN_PASSWORD_HASH`) é só um bootstrap de professor.
 - **Força bruta:** limite de 8 tentativas por IP a cada 10 min e 12 por e-mail a
   cada 15 min (resposta HTTP 429).
 - **CSRF:** rotas de escrita exigem `Content-Type: application/json` e a mesma
@@ -116,15 +124,16 @@ banco (o app já está preparado para isso):
 1. Crie um banco grátis em <https://neon.com> e copie a connection string;
 2. Crie o arquivo `.env.local` (veja o exemplo em `.env.example`) com
    `DATABASE_URL="postgresql://…?sslmode=require"`;
-3. Reinicie o app. As tabelas (`reservas`, `atividades`, `bloqueios`) são criadas
-   automaticamente e todos os usuários passam a ver os mesmos dados;
+3. Reinicie o app. As tabelas (`reservas`, `atividades`, `bloqueios` e `senhas`)
+   são criadas automaticamente e todos os usuários passam a ver os mesmos dados;
 4. No Render, configure a mesma variável `DATABASE_URL` nas opções do serviço.
 
 > No Windows, se o PowerShell bloquear `npm.ps1`, use `npm.cmd run dev`.
 
 ## O que já funciona
 
-- **Login em duas etapas com e-mail e senha:** primeiro escolha **Aluno** ou **Professor**, depois informe o e-mail e a senha de acesso do app (definida pela coordenação). O servidor valida a senha e libera somente os e-mails cadastrados em `src/lib/access.ts`. O botão **Google** fica logo abaixo, como alternativa. A sessão fica salva no navegador.
+- **Login em duas etapas com e-mail e senha:** primeiro escolha **Aluno** ou **Professor**, depois informe o e-mail e a **senha individual** definida pela coordenação. O servidor verifica o hash scrypt e libera somente os e-mails cadastrados em `src/lib/access.ts`. O botão **Google** fica logo abaixo, como alternativa. A sessão fica em um cookie HttpOnly.
+- **Senhas individuais:** em **Configurações → Senhas de acesso**, o professor vê todos os alunos e professores, define/troca/remove a senha de cada um e copia a senha gerada para entregar. O status “Com senha / Sem senha” aparece na lista.
 - **Permissões por perfil:** professores podem reservar espaços, cancelar reservas, publicar e excluir atividades e abrir as configurações; alunos têm acesso somente leitura e não veem Configurações.
 - **App começa vazio:** sem reservas, atividades ou bloqueios de exemplo. Tudo o que aparece é criado pelos usuários.
 - Reserva automática de horário livre com **prevenção de conflito** (o horário fica indisponível na hora).
@@ -133,7 +142,7 @@ banco (o app já está preparado para isso):
 - Publicação de provas/atividades com data da prova, prazo de entrega e anexos (nome e tamanho).
 - Filtro por turma, calendário mensal com marcadores e detalhe da atividade.
 - **Modo escuro** com botão de alternância (claro/escuro), aplicado ao calendário, às turmas, ao login e a todas as telas; a escolha fica salva no navegador.
-- Persistência local no navegador (`localStorage`), então a sessão e as alterações sobrevivem ao recarregar.
+- Persistência dos dados no PostgreSQL (Neon) quando `DATABASE_URL` está configurada; sem banco, o app usa um cache local no navegador (`localStorage`).
 - Layout responsivo: barra lateral no computador, navegação inferior no celular.
 - **Tema do colégio (preto e verde):** botão com o mascote do CEPK ao lado do botão claro/escuro; ativa o modo escuro com o verde do Colégio Estadual Presidente Kennedy.
 - **PWA instalável:** `manifest.json` + Service Worker (`public/sw.js`); o app pode ser instalado no celular pelo botão "Instalar aplicativo" (menu lateral e Configurações) e abre em tela cheia, sem barra do navegador.
@@ -141,11 +150,11 @@ banco (o app já está preparado para isso):
 
 ## O que é simulado
 
-- **Login e permissões:** o acesso pode ser feito com **e-mail + senha de acesso do app** ou com a **conta Google**. O servidor valida a credencial e libera o perfil de **professor** apenas para os e-mails de `REGISTERED_TEACHERS` e o de **aluno** apenas para os e-mails de `REGISTERED_STUDENTS`, ambos em `src/lib/access.ts`. Os demais recebem a mensagem para falar com a coordenação. A senha real da conta Google nunca passa pelo app.
-- **Dados:** não há dados de exemplo. Reservas e atividades são criadas pelos usuários e ficam apenas neste navegador.
+- **Login e permissões:** o acesso pode ser feito com **e-mail + senha individual** ou com a **conta Google**. O servidor valida a credencial e libera o perfil de **professor** apenas para os e-mails de `REGISTERED_TEACHERS` e o de **aluno** apenas para os e-mails de `REGISTERED_STUDENTS`, ambos em `src/lib/access.ts`. Os demais recebem a mensagem para falar com a coordenação. A senha real da conta Google nunca passa pelo app.
+- **Dados:** não há dados de exemplo. Reservas e atividades são criadas pelos usuários e ficam no PostgreSQL; sem banco, no navegador.
 - **Upload:** os arquivos não são enviados; só o nome e o tamanho são guardados.
-- **Configurações:** os ajustes da tela de configurações não são salvos (só a limpeza dos dados funciona).
-- **Backend:** não há banco de dados nem API.
+- **Configurações:** as senhas individuais são salvas de verdade; os demais ajustes da tela de configurações ainda são uma prévia e não são salvos.
+- **Backend:** rotas de API no próprio Next.js e PostgreSQL (Neon) quando `DATABASE_URL` está configurada.
 
 ## Tecnologia
 
