@@ -33,7 +33,7 @@ export const CLASSES: ClassGroup[] = [
   { id: "7b", name: "7º ano B", shift: "Tarde" },
   { id: "8a", name: "8º ano A", shift: "Manhã" },
   { id: "9a", name: "9º ano A", shift: "Tarde" },
-  { id: "1dsb", name: "1°DSB", shift: "Manhã" },
+  { id: "1dsb", name: "1°DSB", shift: "Tarde" },
 ];
 
 export const SUBJECTS = [
