@@ -10,6 +10,27 @@ renderizados automaticamente pelo GitHub.
 > - 👁️ **Somente leitura** — aluno visualiza, mas não altera.
 > - 🧪 **Prévia** — tela de demonstração, ainda não salva alterações.
 
+## Fluxogramas em imagem
+
+Os dois fluxogramas abaixo foram desenhados com os **símbolos corretos de
+fluxograma**: elipse para **início/fim**, retângulo para **processo**, losango
+para **decisão**, paralelogramo para **entrada/saída** e setas para indicar o
+**fluxo**. Todos os caminhos têm início, fim e as saídas **Sim/Não** das
+decisões.
+
+### 1. Login e acesso ao sistema
+
+[![Fluxograma de login e acesso](fluxogramas/1-fluxo-login-e-acesso.png)](fluxogramas/1-fluxo-login-e-acesso.png)
+
+### 2. Reservas de espaços e atividades
+
+[![Fluxograma de reservas e atividades](fluxogramas/2-fluxo-reservas-e-atividades.png)](fluxogramas/2-fluxo-reservas-e-atividades.png)
+
+Arquivos em tamanho original: [`docs/fluxogramas/`](./fluxogramas).
+
+Os diagramas Mermaid abaixo repetem o mesmo conteúdo em formato de texto,
+para facilitar a leitura e a edição.
+
 ---
 
 ## 1. Visão geral: da entrada até cada tela
