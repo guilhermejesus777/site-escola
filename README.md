@@ -9,7 +9,7 @@ App web para a escola resolver dois problemas em um só lugar:
 >
 > 🔗 **Site publicado:** <https://site-escola-1nmy.onrender.com> (plano gratuito do Render: o servidor "dorme" após inatividade e a primeira visita pode demorar até ~50 s)
 >
-> Planejamento completo: [`PLANEJAMENTO.md`](./PLANEJAMENTO.md) · Roteiro de demonstração: [`docs/PROTOTIPO.md`](./docs/PROTOTIPO.md)
+> Planejamento completo: [`PLANEJAMENTO.md`](./PLANEJAMENTO.md) · Roteiro de demonstração: [`docs/PROTOTIPO.md`](./docs/PROTOTIPO.md) · Fluxograma do site: [`docs/FLUXOGRAMA.md`](./docs/FLUXOGRAMA.md)
 
 ## Prévia
 
