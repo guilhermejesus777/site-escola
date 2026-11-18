@@ -13,6 +13,20 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+/**
+ * Contas com acesso total ao painel administrativo.
+ *
+ * O administrador pode entrar como aluno ou como professor, além de ver a
+ * área "Admin" para cadastrar pessoas e aprovar solicitações.
+ */
+export const ADMIN_EMAILS = [
+  "guilherme.jesus24@escola.pr.gov.br",
+];
+
+export function isAdminEmail(email: string): boolean {
+  return ADMIN_EMAILS.includes(normalizeEmail(email));
+}
+
 export const REGISTERED_TEACHERS: RegisteredTeacher[] = [
   // Cadastro real da coordenação. Adicione novos professores no mesmo formato:
   // { email: "nome.sobrenome@escola.pr.gov.br", name: "Nome Sobrenome" },
@@ -55,6 +69,47 @@ export function findRegisteredStudent(email: string): string | undefined {
 
 export function isRegisteredStudent(email: string): boolean {
   return findRegisteredStudent(email) !== undefined;
+}
+
+export type RegisteredUser = {
+  email: string;
+  name: string;
+  role: "professor" | "aluno";
+};
+
+/** Usuário da lista fixa da escola (professor ou aluno). */
+export function findRegisteredUser(email: string): RegisteredUser | undefined {
+  const normalized = normalizeEmail(email);
+
+  const teacher = REGISTERED_TEACHERS.find((item) => item.email === normalized);
+  if (teacher) {
+    return { email: teacher.email, name: teacher.name, role: "professor" };
+  }
+
+  if (REGISTERED_STUDENTS.includes(normalized)) {
+    return { email: normalized, name: nameFromEmail(normalized), role: "aluno" };
+  }
+
+  return undefined;
+}
+
+/** Todos os usuários da lista fixa (usado no painel do administrador). */
+export function listRegisteredUsers(): RegisteredUser[] {
+  const teachers: RegisteredUser[] = REGISTERED_TEACHERS.map((teacher) => ({
+    email: teacher.email,
+    name: teacher.name,
+    role: "professor",
+  }));
+
+  const students: RegisteredUser[] = REGISTERED_STUDENTS.map((email) => ({
+    email,
+    name: nameFromEmail(email),
+    role: "aluno",
+  }));
+
+  return [...teachers, ...students].sort((a, b) =>
+    a.name.localeCompare(b.name, "pt-BR"),
+  );
 }
 
 /**

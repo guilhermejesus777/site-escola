@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Brand } from "@/components/app-shell";
 import {
   IconAlert,
   IconArrowRight,
+  IconCheck,
   IconChevronLeft,
   IconEye,
   IconEyeOff,
@@ -68,14 +69,72 @@ export function LoginScreen() {
   const [activationUser, setActivationUser] = useState<{
     email: string;
     name: string;
+    admin: boolean;
   } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [activationError, setActivationError] = useState<string | null>(null);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [requestName, setRequestName] = useState("");
+  const [requestEmail, setRequestEmail] = useState("");
+  const [requestRole, setRequestRole] = useState<UserRole>("aluno");
+  const [requestMessage, setRequestMessage] = useState("");
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [requestSending, setRequestSending] = useState(false);
+  const [requestDone, setRequestDone] = useState(false);
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const activationRef = useRef(false);
+
+  const openRequest = useCallback((emailValue?: string, roleValue?: UserRole) => {
+    setRequestOpen(true);
+    setRequestDone(false);
+    setRequestError(null);
+    setRequestEmail(emailValue ?? "");
+    setRequestRole(roleValue ?? "aluno");
+    setRequestName("");
+    setRequestMessage("");
+  }, []);
+
+  function closeRequest() {
+    setRequestOpen(false);
+    setRequestDone(false);
+    setRequestError(null);
+  }
+
+  async function submitRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setRequestError(null);
+    setRequestSending(true);
+    try {
+      const response = await fetch("/api/solicitacoes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: requestName,
+          email: requestEmail,
+          role: requestRole,
+          message: requestMessage,
+        }),
+      });
+      const data = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !data?.ok) {
+        setRequestError(data?.error ?? "Não foi possível enviar a solicitação.");
+        return;
+      }
+
+      setRequestDone(true);
+    } catch {
+      setRequestError("Falha de conexão. Verifique a internet e tente novamente.");
+    } finally {
+      setRequestSending(false);
+    }
+  }
 
   useEffect(() => {
     activationRef.current = activation;
@@ -102,10 +161,19 @@ export function LoginScreen() {
       const data = (await response.json().catch(() => null)) as {
         email?: string;
         name?: string;
+        role?: UserRole;
+        admin?: boolean;
         error?: string;
+        code?: string;
       } | null;
 
       if (!response.ok || !data?.email) {
+        if (data?.code === "nao_cadastrado") {
+          openRequest(email, role);
+          setError(null);
+          return;
+        }
+
         setError(
           data?.error ??
             (response.status === 404
@@ -115,9 +183,12 @@ export function LoginScreen() {
         return;
       }
 
-      if (!login(data.email, role, data.name)) {
-        setError("Não foi possível entrar. Confira os dados com a coordenação.");
-      }
+      login({
+        email: data.email,
+        name: data.name ?? data.email,
+        role: data.role ?? role,
+        admin: data.admin === true,
+      });
     } catch {
       setError("Falha de conexão. Verifique a internet e tente novamente.");
     } finally {
@@ -162,9 +233,12 @@ export function LoginScreen() {
       setNewPassword("");
       setConfirmPassword("");
       setActivation(false);
-      if (!login(user.email, role, user.name)) {
-        setError("Senha criada, mas não foi possível entrar. Tente novamente.");
-      }
+      login({
+        email: user.email,
+        name: user.name,
+        role,
+        admin: user.admin,
+      });
     } catch {
       setActivationError("Falha de conexão. Tente novamente.");
     } finally {
@@ -179,9 +253,12 @@ export function LoginScreen() {
     setNewPassword("");
     setConfirmPassword("");
     setActivation(false);
-    if (!login(user.email, role, user.name)) {
-      setError("Não foi possível entrar. Confira se o e-mail está cadastrado.");
-    }
+    login({
+      email: user.email,
+      name: user.name,
+      role,
+      admin: user.admin,
+    });
   }
 
   useEffect(() => {
@@ -215,12 +292,21 @@ export function LoginScreen() {
             const data = (await result.json()) as {
               email?: string;
               name?: string;
+              role?: UserRole;
+              admin?: boolean;
               error?: string;
+              code?: string;
             };
             if (!result.ok || !data.email) {
+              if (data.code === "nao_cadastrado") {
+                openRequest(data.email, currentRole);
+                return;
+              }
               setError(data.error ?? "Não foi possível entrar com essa conta Google.");
               return;
             }
+
+            const resolvedRole = data.role ?? currentRole;
 
             // Ativação de primeiro acesso: o Google confirmou o e-mail.
             // Antes de entrar, a pessoa cria a própria senha de acesso.
@@ -243,6 +329,7 @@ export function LoginScreen() {
                     setActivationUser({
                       email: data.email,
                       name: data.name ?? data.email,
+                      admin: data.admin === true,
                     });
                     return;
                   }
@@ -252,9 +339,12 @@ export function LoginScreen() {
               }
             }
 
-            if (!login(data.email, currentRole, data.name)) {
-              setError("Não foi possível entrar. Confira se o e-mail está cadastrado.");
-            }
+            login({
+              email: data.email,
+              name: data.name ?? data.email,
+              role: resolvedRole,
+              admin: data.admin === true,
+            });
           } catch {
             setError("Falha de conexão ao validar sua conta Google. Tente novamente.");
           } finally {
@@ -299,7 +389,7 @@ export function LoginScreen() {
       cancelled = true;
       script.removeEventListener("load", renderButton);
     };
-  }, [role, login]);
+  }, [role, login, openRequest]);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
@@ -374,7 +464,16 @@ export function LoginScreen() {
                 })}
               </div>
 
-              <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
+              <button
+                type="button"
+                onClick={() => openRequest()}
+                className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 px-3 py-2.5 text-[11px] font-semibold text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50/50 hover:text-indigo-700 dark:border-slate-700 dark:text-slate-300 dark:hover:border-indigo-400/40 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
+              >
+                <IconMail width={13} height={13} />
+                Ainda não tem cadastro? Solicitar acesso
+              </button>
+
+              <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
                 Você pode entrar com a senha de acesso fornecida pela coordenação ou com a sua conta
                 Google da escola.
               </p>
@@ -656,6 +755,142 @@ export function LoginScreen() {
             Se esquecer a senha depois, a coordenação pode definir outra no painel.
           </p>
         </form>
+      </Modal>
+
+      <Modal
+        open={requestOpen}
+        onClose={closeRequest}
+        title={requestDone ? "Solicitação enviada" : "Solicitar cadastro"}
+        description={
+          requestDone
+            ? undefined
+            : "Use um e-mail @escola.pr.gov.br. O administrador precisa aprovar o pedido."
+        }
+        footer={
+          requestDone ? (
+            <Button onClick={closeRequest}>Entendi</Button>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={closeRequest}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                form="form-solicitar-acesso"
+                disabled={requestSending}
+              >
+                {requestSending ? "Enviando…" : "Enviar solicitação"}
+              </Button>
+            </>
+          )
+        }
+      >
+        {requestDone ? (
+          <div className="py-2 text-center">
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
+              <IconCheck width={24} height={24} />
+            </span>
+            <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Pedido enviado para o administrador
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              Aguarde a aprovação. Assim que a conta for liberada, você poderá entrar com o seu
+              e-mail.
+            </p>
+          </div>
+        ) : (
+          <form id="form-solicitar-acesso" onSubmit={submitRequest} className="space-y-3">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Nome completo
+              </span>
+              <input
+                type="text"
+                required
+                value={requestName}
+                onChange={(event) => setRequestName(event.target.value)}
+                placeholder="Ex.: Maria Oliveira"
+                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                E-mail @escola
+              </span>
+              <span className="relative block">
+                <IconMail
+                  width={16}
+                  height={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+                />
+                <input
+                  type="email"
+                  required
+                  inputMode="email"
+                  value={requestEmail}
+                  onChange={(event) => setRequestEmail(event.target.value)}
+                  placeholder="seu.email@escola.pr.gov.br"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+                />
+              </span>
+            </label>
+
+            <div>
+              <span className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Você é
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {(["aluno", "professor"] as UserRole[]).map((value) => {
+                  const Icon = value === "professor" ? IconPresentation : IconGraduationCap;
+                  const active = requestRole === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setRequestRole(value)}
+                      aria-pressed={active}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition ${
+                        active
+                          ? "border-indigo-400 bg-indigo-50 text-indigo-700 dark:border-indigo-400/50 dark:bg-indigo-500/15 dark:text-indigo-200"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <Icon width={16} height={16} />
+                      {value === "professor" ? "Professor" : "Aluno"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Mensagem para o administrador{" "}
+                <span className="font-normal text-slate-400 dark:text-slate-500">(opcional)</span>
+              </span>
+              <textarea
+                value={requestMessage}
+                onChange={(event) => setRequestMessage(event.target.value)}
+                rows={3}
+                maxLength={500}
+                placeholder="Ex.: sou aluno da turma 1°DSB e ainda não tenho acesso."
+                className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
+              />
+            </label>
+
+            {requestError ? (
+              <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[11px] font-medium text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                <IconAlert width={14} height={14} className="mt-0.5 shrink-0" />
+                {requestError}
+              </div>
+            ) : null}
+
+            <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+              A solicitação não libera o acesso na hora. O administrador analisa e aprova o pedido.
+            </p>
+          </form>
+        )}
       </Modal>
     </div>
   );

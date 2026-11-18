@@ -75,4 +75,5 @@ export type SessionUser = {
   email: string;
   name: string;
   role: UserRole;
+  admin: boolean;
 };

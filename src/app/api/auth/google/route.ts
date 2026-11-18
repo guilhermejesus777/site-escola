@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { findRegisteredStudent, findRegisteredTeacher } from "@/lib/access";
 import { GOOGLE_CLIENT_ID } from "@/lib/google";
 import { enforceLoginRateLimit } from "@/lib/rate-limit";
 import { noStoreHeaders, requireSameOrigin } from "@/lib/security";
 import { createSessionToken, sessionCookie } from "@/lib/session";
+import { canUseRole, findAppUser } from "@/lib/users";
 
 export const runtime = "nodejs";
 
@@ -96,35 +96,54 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let name: string;
-  if (role === "professor") {
-    const teacher = findRegisteredTeacher(email);
-    if (!teacher) {
-      return NextResponse.json(
-        {
-          error:
-            "Este e-mail não está cadastrado como professor. Fale com a coordenação.",
-        },
-        { status: 403, headers: noStoreHeaders() },
-      );
-    }
-    name = teacher.name;
-  } else {
-    const student = findRegisteredStudent(email);
-    if (!student) {
-      return NextResponse.json(
-        { error: "Este e-mail não está cadastrado como aluno. Fale com a coordenação." },
-        { status: 403, headers: noStoreHeaders() },
-      );
-    }
-    name = typeof token.name === "string" && token.name.trim() ? token.name.trim() : email;
+  let account: Awaited<ReturnType<typeof findAppUser>>;
+  try {
+    account = await findAppUser(email);
+  } catch {
+    return NextResponse.json(
+      { error: "Não foi possível consultar o cadastro agora. Tente novamente." },
+      { status: 503, headers: noStoreHeaders() },
+    );
   }
 
-  const user = { email, name, role } as const;
+  if (!account) {
+    return NextResponse.json(
+      {
+        error:
+          "Este e-mail ainda não está cadastrado. Peça o cadastro à coordenação ou envie uma solicitação de acesso.",
+        code: "nao_cadastrado",
+        email,
+      },
+      { status: 403, headers: noStoreHeaders() },
+    );
+  }
+
+  if (!canUseRole(account, role)) {
+    return NextResponse.json(
+      {
+        error: `Este e-mail está cadastrado como ${account.role === "professor" ? "professor" : "aluno"}. Escolha o perfil correto para entrar.`,
+      },
+      { status: 403, headers: noStoreHeaders() },
+    );
+  }
+
+  const name =
+    account.role === "professor"
+      ? account.name
+      : typeof token.name === "string" && token.name.trim()
+        ? token.name.trim()
+        : account.name;
+
+  const user = { email: account.email, name, role, admin: account.admin } as const;
   const tokenValue = createSessionToken(user);
 
   return NextResponse.json(
-    { email: user.email, name: user.name, role: user.role },
+    {
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      admin: user.admin,
+    },
     {
       headers: {
         ...noStoreHeaders(),

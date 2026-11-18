@@ -38,6 +38,21 @@ CREATE TABLE IF NOT EXISTS senhas (
   password_hash TEXT NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+CREATE TABLE IF NOT EXISTS usuarios (
+  email TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS solicitacoes (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL,
+  message TEXT,
+  status TEXT NOT NULL DEFAULT 'pendente',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `;
 
 declare global {
@@ -189,6 +204,234 @@ export async function createPasswordHashIfMissing(
      VALUES ($1, $2, now())
      ON CONFLICT (email) DO NOTHING`,
     [normalized, hash],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+/* ------------------------- Usuários e solicitações ------------------------- */
+
+export type StoredUser = {
+  email: string;
+  name: string;
+  role: "professor" | "aluno";
+  createdAt: string;
+};
+
+export type StoredRequest = {
+  id: string;
+  email: string;
+  name: string;
+  role: "professor" | "aluno";
+  message: string;
+  status: "pendente" | "aprovada" | "recusada";
+  createdAt: string;
+};
+
+declare global {
+  var __escolaUsuarios: Map<string, StoredUser> | undefined;
+  var __escolaSolicitacoes: Map<string, StoredRequest> | undefined;
+}
+
+function memoryUsers(): Map<string, StoredUser> {
+  if (!global.__escolaUsuarios) global.__escolaUsuarios = new Map();
+  return global.__escolaUsuarios;
+}
+
+function memoryRequests(): Map<string, StoredRequest> {
+  if (!global.__escolaSolicitacoes) global.__escolaSolicitacoes = new Map();
+  return global.__escolaSolicitacoes;
+}
+
+function toIso(value: unknown): string {
+  return value instanceof Date ? value.toISOString() : String(value);
+}
+
+export async function listExtraUsers(): Promise<StoredUser[]> {
+  if (!HAS_DB) {
+    return Array.from(memoryUsers().values());
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query<{
+    email: string;
+    name: string;
+    role: string;
+    created_at: Date | string;
+  }>("SELECT email, name, role, created_at FROM usuarios ORDER BY name");
+
+  return result.rows
+    .filter((row) => row.role === "professor" || row.role === "aluno")
+    .map((row) => ({
+      email: row.email,
+      name: row.name,
+      role: row.role as "professor" | "aluno",
+      createdAt: toIso(row.created_at),
+    }));
+}
+
+export async function getExtraUser(email: string): Promise<StoredUser | null> {
+  const normalized = normalizeEmail(email);
+
+  if (!HAS_DB) {
+    return memoryUsers().get(normalized) ?? null;
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query<{
+    email: string;
+    name: string;
+    role: string;
+    created_at: Date | string;
+  }>("SELECT email, name, role, created_at FROM usuarios WHERE email = $1", [
+    normalized,
+  ]);
+  const row = result.rows[0];
+  if (!row || (row.role !== "professor" && row.role !== "aluno")) return null;
+
+  return {
+    email: row.email,
+    name: row.name,
+    role: row.role,
+    createdAt: toIso(row.created_at),
+  };
+}
+
+export async function insertExtraUser(user: StoredUser): Promise<void> {
+  const normalized = normalizeEmail(user.email);
+
+  if (!HAS_DB) {
+    memoryUsers().set(normalized, { ...user, email: normalized });
+    return;
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  await pool.query(
+    `INSERT INTO usuarios (email, name, role)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (email) DO NOTHING`,
+    [normalized, user.name, user.role],
+  );
+}
+
+export async function listSolicitacoes(): Promise<StoredRequest[]> {
+  if (!HAS_DB) {
+    return Array.from(memoryRequests().values()).sort((a, b) =>
+      b.createdAt.localeCompare(a.createdAt),
+    );
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query<{
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    message: string | null;
+    status: string;
+    created_at: Date | string;
+  }>(
+    "SELECT id, email, name, role, message, status, created_at FROM solicitacoes ORDER BY created_at DESC",
+  );
+
+  return result.rows
+    .filter(
+      (row) =>
+        (row.role === "professor" || row.role === "aluno") &&
+        (row.status === "pendente" ||
+          row.status === "aprovada" ||
+          row.status === "recusada"),
+    )
+    .map((row) => ({
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      role: row.role as "professor" | "aluno",
+      message: row.message ?? "",
+      status: row.status as StoredRequest["status"],
+      createdAt: toIso(row.created_at),
+    }));
+}
+
+export async function getSolicitacao(id: string): Promise<StoredRequest | null> {
+  if (!HAS_DB) {
+    return memoryRequests().get(id) ?? null;
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query<{
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    message: string | null;
+    status: string;
+    created_at: Date | string;
+  }>(
+    "SELECT id, email, name, role, message, status, created_at FROM solicitacoes WHERE id = $1",
+    [id],
+  );
+  const row = result.rows[0];
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    role:
+      row.role === "professor" || row.role === "aluno" ? row.role : "aluno",
+    message: row.message ?? "",
+    status:
+      row.status === "aprovada" || row.status === "recusada"
+        ? row.status
+        : "pendente",
+    createdAt: toIso(row.created_at),
+  };
+}
+
+export async function insertSolicitacao(request: StoredRequest): Promise<void> {
+  if (!HAS_DB) {
+    memoryRequests().set(request.id, request);
+    return;
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  await pool.query(
+    `INSERT INTO solicitacoes (id, email, name, role, message, status, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [
+      request.id,
+      request.email,
+      request.name,
+      request.role,
+      request.message,
+      request.status,
+      request.createdAt,
+    ],
+  );
+}
+
+export async function setSolicitacaoStatus(
+  id: string,
+  status: "aprovada" | "recusada",
+): Promise<boolean> {
+  if (!HAS_DB) {
+    const current = memoryRequests().get(id);
+    if (!current) return false;
+    memoryRequests().set(id, { ...current, status });
+    return true;
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query(
+    "UPDATE solicitacoes SET status = $1 WHERE id = $2",
+    [status, id],
   );
   return (result.rowCount ?? 0) > 0;
 }

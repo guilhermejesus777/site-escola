@@ -11,8 +11,6 @@ import {
 } from "react";
 import { createInitialData } from "@/lib/mock-data";
 import { todayISO, weekdayIndex } from "@/lib/date";
-import { findRegisteredTeacher } from "@/lib/access";
-import { validateEmail } from "@/lib/email";
 import type {
   Activity,
   Block,
@@ -31,7 +29,8 @@ type ActivityInput = Omit<Activity, "id" | "createdAt">;
 
 type StoreValue = DataState & {
   user: SessionUser | null;
-  login: (email: string, role: UserRole, name?: string) => boolean;
+  login: (user: SessionUser) => void;
+  switchRole: (role: UserRole) => Promise<string | null>;
   logout: () => void;
   getReservation: (spaceId: string, date: string, slotId: string) => Reservation | undefined;
   getBlock: (spaceId: string, date: string, slotId: string) => Block | undefined;
@@ -69,28 +68,14 @@ function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-/** "ana.souza@escola.com" → "Ana Souza" */
-export function nameFromEmail(email: string): string {
-  const local = email
-    .split("@")[0]
-    .replace(/[._-]+/g, " ")
-    .replace(/[0-9]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!local) return "Usuário";
-  return local
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-}
-
 function isSessionUser(value: unknown): value is SessionUser {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<SessionUser>;
   return (
     typeof candidate.email === "string" &&
     typeof candidate.name === "string" &&
-    (candidate.role === "professor" || candidate.role === "aluno")
+    (candidate.role === "professor" || candidate.role === "aluno") &&
+    typeof candidate.admin === "boolean"
   );
 }
 
@@ -227,25 +212,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [state, ready]);
 
-  const login = useCallback((email: string, role: UserRole, name?: string) => {
-    const result = validateEmail(email);
-    if (!result.ok) return false;
-    const teacher =
-      role === "professor" ? findRegisteredTeacher(result.email) : undefined;
-    if (role === "professor" && !teacher) return false;
-    const cleanEmail = result.email;
-    const nextUser: SessionUser = {
-      email: cleanEmail,
-      name: teacher?.name ?? (name?.trim() || nameFromEmail(cleanEmail)),
-      role,
-    };
+  const login = useCallback((nextUser: SessionUser) => {
     setUser(nextUser);
     try {
       window.localStorage.removeItem(SESSION_KEY);
     } catch {
       // Sem armazenamento: a sessão vale só para esta aba.
     }
-    return true;
+  }, []);
+
+  const switchRole = useCallback(async (role: UserRole): Promise<string | null> => {
+    try {
+      const response = await fetch("/api/auth/perfil", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      });
+      const data = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        user?: unknown;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !data?.ok || !isSessionUser(data.user)) {
+        return data?.error ?? "Não foi possível trocar o perfil agora.";
+      }
+
+      setUser(data.user);
+      return null;
+    } catch {
+      return "Falha de conexão ao trocar o perfil.";
+    }
   }, []);
 
   const logout = useCallback(() => {
@@ -355,7 +352,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const clearData = useCallback(() => {
-    if (user?.role !== "professor") return;
+    if (user?.role !== "professor" && !user?.admin) return;
     setState(createInitialData());
     sendToDb("reset");
   }, [user]);
@@ -365,6 +362,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ...state,
       user,
       login,
+      switchRole,
       logout,
       getReservation,
       getBlock,
@@ -378,6 +376,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       state,
       user,
       login,
+      switchRole,
       logout,
       getReservation,
       getBlock,
