@@ -10,6 +10,7 @@ import {
   IconHome,
   IconLogOut,
   IconSettings,
+  IconShield,
 } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SchoolThemeToggle } from "@/components/school-theme-toggle";
@@ -24,13 +25,15 @@ type NavItem = {
   shortLabel?: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   professorOnly?: boolean;
+  adminOnly?: boolean;
 };
 
 const NAV: NavItem[] = [
   { href: "/", label: "Início", icon: IconHome },
   { href: "/reservas", label: "Reservas", icon: IconCalendar },
   { href: "/atividades", label: "Provas e atividades", shortLabel: "Atividades", icon: IconBook },
-  { href: "/configuracoes", label: "Configurações", icon: IconSettings, professorOnly: true },
+  { href: "/configuracoes", label: "Configurações", shortLabel: "Ajustes", icon: IconSettings, professorOnly: true },
+  { href: "/admin", label: "Admin", icon: IconShield, adminOnly: true },
 ];
 
 function isActive(pathname: string, href: string): boolean {
@@ -65,14 +68,25 @@ export function Brand() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useStore();
+  const { user, logout, switchRole } = useStore();
+  const [switching, setSwitching] = useState(false);
 
   const isProfessor = user?.role === "professor";
   const name = user?.name ?? "Visitante";
   const roleLabel = isProfessor ? "Professor(a)" : "Aluno(a)";
-  const navItems = NAV.filter((item) => !item.professorOnly || isProfessor);
+  const navItems = NAV.filter(
+    (item) =>
+      (!item.professorOnly || isProfessor) && (!item.adminOnly || user?.admin),
+  );
   const initials = initialsOf(name);
   const [confirmLogout, setConfirmLogout] = useState(false);
+
+  async function handleSwitchRole(role: "aluno" | "professor") {
+    if (role === user?.role) return;
+    setSwitching(true);
+    await switchRole(role);
+    setSwitching(false);
+  }
 
   function handleLogout() {
     setConfirmLogout(true);
@@ -124,6 +138,41 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
+
+        {user?.admin ? (
+          <div className="mx-3 mb-2 rounded-xl border border-indigo-200 bg-indigo-50/60 p-2.5 dark:border-indigo-500/30 dark:bg-indigo-500/10">
+            <p className="flex items-center gap-1.5 text-[11px] font-semibold text-indigo-800 dark:text-indigo-200">
+              <IconShield width={12} height={12} />
+              Administrador — entrar como
+            </p>
+            <div className="mt-1.5 grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleSwitchRole("aluno")}
+                disabled={switching}
+                className={`rounded-lg px-2 py-1.5 text-[11px] font-semibold transition disabled:opacity-60 ${
+                  !isProfessor
+                    ? "bg-sky-600 text-white shadow-sm"
+                    : "bg-white text-slate-600 hover:bg-sky-50 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                Aluno
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchRole("professor")}
+                disabled={switching}
+                className={`rounded-lg px-2 py-1.5 text-[11px] font-semibold transition disabled:opacity-60 ${
+                  isProfessor
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "bg-white text-slate-600 hover:bg-indigo-50 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                Professor
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         <div className="m-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 dark:border-slate-700 dark:bg-slate-800/60">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-300">

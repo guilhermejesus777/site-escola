@@ -11,7 +11,7 @@
  */
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { NextRequest } from "next/server";
-import { findRegisteredStudent, findRegisteredTeacher } from "@/lib/access";
+import { findAppUser } from "@/lib/users";
 import type { SessionUser, UserRole } from "@/types";
 
 export const SESSION_COOKIE = "cepk_sessao";
@@ -57,6 +57,7 @@ export function createSessionToken(user: SessionUser): string {
     email: user.email,
     name: user.name,
     role: user.role,
+    admin: user.admin,
     iat: now,
     exp: now + SESSION_TTL_SECONDS,
   };
@@ -83,23 +84,40 @@ export function readSessionToken(token: string | undefined | null): SessionUser 
   if (parsed.role !== "aluno" && parsed.role !== "professor") return null;
   if (typeof parsed.exp !== "number" || parsed.exp <= Math.floor(Date.now() / 1000)) return null;
 
-  const email = parsed.email.trim().toLowerCase();
-  const role: UserRole = parsed.role;
-
-  // Revalida a lista de acesso em toda requisição: se alguém sair da lista,
-  // a sessão deixa de valer imediatamente.
-  if (role === "professor") {
-    const teacher = findRegisteredTeacher(email);
-    if (!teacher) return null;
-    return { email, name: teacher.name, role };
-  }
-
-  if (!findRegisteredStudent(email)) return null;
-  return { email, name: parsed.name, role };
+  return {
+    email: parsed.email.trim().toLowerCase(),
+    name: parsed.name,
+    role: parsed.role as UserRole,
+    admin: parsed.admin === true,
+  };
 }
 
-export function getUserFromRequest(request: NextRequest): SessionUser | null {
-  return readSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+/**
+ * Revalida a sessão no servidor a cada requisição.
+ *
+ * A lista de usuários pode mudar (o administrador cadastra novas contas), por
+ * isso a checagem é assíncrona: o e-mail precisa continuar cadastrado.
+ */
+export async function getUserFromRequest(
+  request: NextRequest,
+): Promise<SessionUser | null> {
+  const session = readSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+  if (!session) return null;
+
+  const user = await findAppUser(session.email);
+  if (!user) return null;
+
+  // O administrador pode escolher entrar como aluno ou como professor.
+  const role = user.admin ? session.role : user.role;
+
+  const name = user.admin ? user.name : session.name || user.name;
+
+  return {
+    email: user.email,
+    name,
+    role,
+    admin: user.admin,
+  };
 }
 
 export function sessionCookie(token: string): string {

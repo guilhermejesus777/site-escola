@@ -5,7 +5,7 @@ import { getUserFromRequest } from "@/lib/session";
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const user = getUserFromRequest(request);
+  const user = await getUserFromRequest(request);
 
   if (!user) {
     return NextResponse.json(

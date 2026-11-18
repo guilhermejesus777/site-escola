@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { findRegisteredStudent, findRegisteredTeacher, nameFromEmail } from "@/lib/access";
 import { getPasswordHash } from "@/lib/db";
 import { validateEmail } from "@/lib/email";
 import {
@@ -10,6 +9,7 @@ import {
 import { clientIp, enforceLoginRateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { noStoreHeaders, requireSameOrigin } from "@/lib/security";
 import { createSessionToken, sessionCookie } from "@/lib/session";
+import { canUseRole, findAppUser } from "@/lib/users";
 
 export const runtime = "nodejs";
 
@@ -59,6 +59,38 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // A conta precisa existir na lista da escola ou ter sido cadastrada pelo
+  // administrador. O admin pode escolher entrar como aluno ou professor.
+  let account: Awaited<ReturnType<typeof findAppUser>>;
+  try {
+    account = await findAppUser(result.email);
+  } catch {
+    return NextResponse.json(
+      { error: "Não foi possível consultar o cadastro agora. Tente novamente." },
+      { status: 503, headers: noStoreHeaders() },
+    );
+  }
+
+  if (!account) {
+    return NextResponse.json(
+      {
+        error:
+          "Este e-mail ainda não está cadastrado. Peça o cadastro à coordenação ou envie uma solicitação de acesso.",
+        code: "nao_cadastrado",
+      },
+      { status: 403, headers: noStoreHeaders() },
+    );
+  }
+
+  if (!canUseRole(account, role)) {
+    return NextResponse.json(
+      {
+        error: `Este e-mail está cadastrado como ${account.role === "professor" ? "professor" : "aluno"}. Escolha o perfil correto para entrar.`,
+      },
+      { status: 403, headers: noStoreHeaders() },
+    );
+  }
+
   // Senha individual cadastrada pela coordenação tem prioridade.
   // Sem ela, a senha mestra do servidor serve apenas como bootstrap de
   // professor; alunos precisam da senha individual.
@@ -76,7 +108,7 @@ export async function POST(request: NextRequest) {
 
   if (storedHash) {
     authenticated = verifyPasswordHash(password, storedHash);
-  } else if (role === "professor") {
+  } else if (role === "professor" || account.admin) {
     if (isAppPasswordConfigured() || process.env.NODE_ENV !== "production") {
       authenticated = verifyAppPassword(password);
     } else {
@@ -100,36 +132,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let name: string;
-  if (role === "professor") {
-    const teacher = findRegisteredTeacher(result.email);
-    if (!teacher) {
-      return NextResponse.json(
-        {
-          error:
-            "Este e-mail não está cadastrado como professor. Fale com a coordenação.",
-        },
-        { status: 403, headers: noStoreHeaders() },
-      );
-    }
-    name = teacher.name;
-  } else {
-    if (!findRegisteredStudent(result.email)) {
-      return NextResponse.json(
-        { error: "Este e-mail não está cadastrado como aluno. Fale com a coordenação." },
-        { status: 403, headers: noStoreHeaders() },
-      );
-    }
-    name = nameFromEmail(result.email);
-  }
   resetRateLimit(`senha:ip:${clientIp(request)}`);
   resetRateLimit(`senha:email:${result.email}`);
 
-  const user = { email: result.email, name, role } as const;
+  const user = {
+    email: account.email,
+    name: account.name,
+    role,
+    admin: account.admin,
+  } as const;
   const token = createSessionToken(user);
 
   return NextResponse.json(
-    { email: user.email, name: user.name, role: user.role },
+    {
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      admin: user.admin,
+    },
     {
       headers: {
         ...noStoreHeaders(),

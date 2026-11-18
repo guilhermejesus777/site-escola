@@ -26,6 +26,7 @@ App web para a escola resolver dois problemas em um só lugar:
 | `/reservas` | Reservas | Calendário semanal por espaço, reserva em 2 cliques, cancelamento, bloqueios da coordenação e ocupação da semana. |
 | `/atividades` | Provas e atividades | Calendário mensal, lista de próximas entregas, detalhe com anexos e publicação de nova atividade. |
 | `/configuracoes` | Configurações | Painel da coordenação (somente professor): espaços, grade de horários, regras, permissões e limpeza dos dados. |
+| `/admin` | Admin | Área exclusiva do administrador: cadastrar e-mails como aluno ou professor, aprovar/recusar solicitações e alternar entre os dois perfis. |
 | `/privacidade` | Política de Privacidade | Página pública (abre sem login) exigida pelo Google para publicar o login OAuth. |
 | `/termos` | Termos de Uso | Página pública (abre sem login) com as regras de uso do app. |
 
@@ -81,6 +82,28 @@ A tela de login aceita **e-mail + senha de acesso** e, abaixo, o botão do
   navegador não guarda o perfil, então não dá para "virar professor" editando o
   `localStorage`.
 
+### Administrador e solicitações de acesso
+
+A conta `guilherme.jesus24@escola.pr.gov.br` é a administradora do app. O
+administrador **não é um terceiro perfil de login**: ele escolhe entrar como
+**aluno** ou como **professor**, e o item **Admin** aparece nos dois modos
+(barra lateral no computador e menu inferior no celular).
+
+Na área **Admin** (`/admin`) é possível:
+
+- **entrar como aluno ou professor** a qualquer momento (o perfil ativo muda
+  sem sair da conta);
+- **cadastrar um e-mail** informando o nome e escolhendo o perfil da pessoa;
+- **analisar solicitações**: quem ainda não tem conta pode clicar em
+  **“Ainda não tem cadastro? Solicitar acesso”** na tela de login, informar um
+  e-mail `@escola.pr.gov.br`, o perfil desejado e uma mensagem. O pedido fica
+  pendente até o administrador **aprovar** ou **recusar**;
+- consultar todas as contas cadastradas e o histórico das solicitações.
+
+As contas criadas pelo administrador e as solicitações ficam no PostgreSQL
+(tabelas `usuarios` e `solicitacoes`). Sem `DATABASE_URL`, elas vivem apenas em
+memória — útil para testar, mas somem quando o servidor reinicia.
+
 ### Login com Google (opcional)
 
 Se o Google estiver configurado, o aluno/professor também pode entrar com a
@@ -97,8 +120,10 @@ conta Google da escola; nesse caso o Google faz a verificação da senha.
 6. No Render, cadastre a mesma variável `NEXT_PUBLIC_GOOGLE_CLIENT_ID` e faça um novo deploy.
 
 Sem essa variável, a tela de login mostra um aviso de configuração e ninguém
-consegue entrar. Os e-mails autorizados ficam em `src/lib/access.ts`:
-professores em `REGISTERED_TEACHERS` e alunos em `REGISTERED_STUDENTS`.
+consegue entrar pelo Google. Os e-mails da lista fixa ficam em
+`src/lib/access.ts` (professores em `REGISTERED_TEACHERS` e alunos em
+`REGISTERED_STUDENTS`); os demais são cadastrados pelo administrador na área
+**Admin** e ficam no banco.
 
 ## Segurança
 
@@ -115,7 +140,8 @@ professores em `REGISTERED_TEACHERS` e alunos em `REGISTERED_STUDENTS`.
 - **CSRF:** rotas de escrita exigem `Content-Type: application/json` e a mesma
   origem do site.
 - **Permissões no servidor:** `/api/dados` exige sessão; criar, excluir e limpar
-  dados é permitido só para professor. Aluno é somente leitura.
+  dados é permitido só para professor (ou administrador). Aluno é somente
+  leitura. As rotas `/api/admin/*` exigem `admin: true` no cookie assinado.
 - **Lista de acesso revalidada** a cada requisição: se um e-mail sair da lista,
   a sessão deixa de valer na hora.
 - **Cabeçalhos de segurança:** CSP, HSTS, `X-Frame-Options`, `nosniff`,

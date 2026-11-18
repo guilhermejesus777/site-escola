@@ -21,7 +21,7 @@ const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 200;
 
 export async function GET(request: NextRequest) {
-  const user = getUserFromRequest(request);
+  const user = await getUserFromRequest(request);
   if (!user) {
     return NextResponse.json(
       { ok: false, error: "Faça login para consultar a sua senha." },
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const invalidRequest = requireSameOrigin(request);
   if (invalidRequest) return invalidRequest;
 
-  const user = getUserFromRequest(request);
+  const user = await getUserFromRequest(request);
   if (!user) {
     return NextResponse.json(
       { ok: false, error: "Faça login para criar a sua senha." },

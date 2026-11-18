@@ -155,7 +155,7 @@ function tooLarge(record: unknown): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const user = getUserFromRequest(request);
+  const user = await getUserFromRequest(request);
   if (!user) {
     return NextResponse.json(
       { ok: false, error: "Faça login para acessar os dados." },
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
   const invalidRequest = requireSameOrigin(request);
   if (invalidRequest) return invalidRequest;
 
-  const user = getUserFromRequest(request);
+  const user = await getUserFromRequest(request);
   if (!user) {
     return NextResponse.json(
       { ok: false, error: "Faça login para alterar os dados." },
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (user.role !== "professor") {
+  if (user.role !== "professor" && !user.admin) {
     return NextResponse.json(
       { ok: false, error: "Apenas professores podem alterar os dados." },
       { status: 403, headers: noStoreHeaders() },
