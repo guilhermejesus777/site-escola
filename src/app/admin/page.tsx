@@ -6,6 +6,7 @@ import {
   IconAlert,
   IconCheck,
   IconGraduationCap,
+  IconLock,
   IconMail,
   IconPlus,
   IconPresentation,
@@ -13,7 +14,15 @@ import {
   IconUsers,
   IconX,
 } from "@/components/icons";
-import { Badge, Button, Field, Toast, inputClass } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  ConfirmDialog,
+  Field,
+  Modal,
+  Toast,
+  inputClass,
+} from "@/components/ui";
 import { useStore } from "@/lib/store";
 import type { UserRole } from "@/types";
 
@@ -23,6 +32,7 @@ type AdminUser = {
   role: UserRole;
   admin: boolean;
   source: "escola" | "admin";
+  hasPassword: boolean;
 };
 
 type AdminRequest = {
@@ -78,6 +88,16 @@ export default function AdminPage() {
 
   const [decidingId, setDecidingId] = useState<string | null>(null);
   const [grantedRoles, setGrantedRoles] = useState<Record<string, UserRole>>({});
+
+  const [managed, setManaged] = useState<AdminUser | null>(null);
+  const [manageName, setManageName] = useState("");
+  const [manageRole, setManageRole] = useState<UserRole>("aluno");
+  const [managePassword, setManagePassword] = useState("");
+  const [manageError, setManageError] = useState<string | null>(null);
+  const [manageBusy, setManageBusy] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<AdminUser | null>(null);
+  const [passwordRemoveTarget, setPasswordRemoveTarget] =
+    useState<AdminUser | null>(null);
   const [switching, setSwitching] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "error">("success");
@@ -249,6 +269,137 @@ export default function AdminPage() {
       setToastTone("success");
       setToast(`Agora você está navegando como ${roleLabel(role).toLowerCase()}.`);
     }
+  }
+
+  /* ------------------- Gerenciamento das contas cadastradas ------------------ */
+
+  function openManage(item: AdminUser) {
+    setManaged(item);
+    setManageName(item.name);
+    setManageRole(item.role);
+    setManagePassword("");
+    setManageError(null);
+    setManageBusy(false);
+  }
+
+  function closeManage() {
+    if (manageBusy) return;
+    setManaged(null);
+    setManagePassword("");
+    setManageError(null);
+  }
+
+  async function adminRequest(
+    method: "PATCH" | "DELETE",
+    payload: Record<string, unknown>,
+    email?: string,
+  ): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const response = await fetch(
+        `/api/admin/usuarios${email ? `?email=${encodeURIComponent(email)}` : ""}`,
+        {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: method === "DELETE" ? undefined : JSON.stringify(payload),
+        },
+      );
+      const data = (await response.json().catch(() => null)) as {
+        ok?: boolean;
+        error?: string;
+      } | null;
+      if (!response.ok || !data?.ok) {
+        return {
+          ok: false,
+          error: data?.error ?? "Não foi possível concluir esta ação.",
+        };
+      }
+      return { ok: true };
+    } catch {
+      return { ok: false, error: "Falha de conexão. Tente novamente." };
+    }
+  }
+
+  async function handleSaveProfile() {
+    if (!managed) return;
+    setManageBusy(true);
+    setManageError(null);
+    const result = await adminRequest("PATCH", {
+      action: "editar",
+      email: managed.email,
+      name: manageName,
+      role: manageRole,
+    });
+    setManageBusy(false);
+    if (!result.ok) {
+      setManageError(result.error ?? null);
+      return;
+    }
+    setManaged({ ...managed, name: manageName.trim(), role: manageRole });
+    setToastTone("success");
+    setToast("Dados da conta atualizados.");
+    await load();
+  }
+
+  async function handleSavePassword() {
+    if (!managed) return;
+    if (managePassword.length < 8) {
+      setManageError("A senha precisa ter pelo menos 8 caracteres.");
+      return;
+    }
+    setManageBusy(true);
+    setManageError(null);
+    const result = await adminRequest("PATCH", {
+      action: "senha",
+      email: managed.email,
+      password: managePassword,
+    });
+    setManageBusy(false);
+    if (!result.ok) {
+      setManageError(result.error ?? null);
+      return;
+    }
+    setManagePassword("");
+    setManaged({ ...managed, hasPassword: true });
+    setToastTone("success");
+    setToast("Senha definida. A pessoa já pode entrar com este e-mail e ela.");
+    await load();
+  }
+
+  async function handleRemovePassword(item: AdminUser) {
+    setManageBusy(true);
+    const result = await adminRequest("PATCH", {
+      action: "remover-senha",
+      email: item.email,
+    });
+    setManageBusy(false);
+    setPasswordRemoveTarget(null);
+    if (!result.ok) {
+      setToastTone("error");
+      setToast(result.error ?? "Não foi possível remover a senha.");
+      return;
+    }
+    if (managed?.email === item.email) {
+      setManaged({ ...managed, hasPassword: false });
+    }
+    setToastTone("success");
+    setToast("Senha removida. Esta conta só entra com Google ou senha mestra.");
+    await load();
+  }
+
+  async function handleRemoveUser(item: AdminUser) {
+    setManageBusy(true);
+    const result = await adminRequest("DELETE", {}, item.email);
+    setManageBusy(false);
+    setRemoveTarget(null);
+    if (!result.ok) {
+      setToastTone("error");
+      setToast(result.error ?? "Não foi possível remover este e-mail.");
+      return;
+    }
+    if (managed?.email === item.email) setManaged(null);
+    setToastTone("success");
+    setToast(`${item.email} foi removido do cadastro.`);
+    await load();
   }
 
   return (
@@ -607,11 +758,22 @@ export default function AdminPage() {
                       {item.email}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <RoleBadge role={item.role} />
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                    <Badge tone={item.hasPassword ? "emerald" : "slate"}>
+                      <IconLock width={10} height={10} />
+                      {item.hasPassword ? "Com senha" : "Sem senha"}
+                    </Badge>
+                    <span className="hidden text-[10px] text-slate-400 sm:inline dark:text-slate-500">
                       {item.source === "escola" ? "Lista da escola" : "Cadastro admin"}
                     </span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => openManage(item)}
+                    >
+                      Gerenciar
+                    </Button>
                   </div>
                 </li>
               ))}
@@ -654,6 +816,193 @@ export default function AdminPage() {
           </ul>
         </section>
       ) : null}
+
+      {/* Gerenciar conta */}
+      <Modal
+        open={Boolean(managed)}
+        onClose={closeManage}
+        title="Gerenciar conta"
+        description={managed?.email}
+        footer={
+          managed ? (
+            <>
+              <Button
+                variant="secondary"
+                onClick={closeManage}
+                disabled={manageBusy}
+              >
+                Fechar
+              </Button>
+              {managed.source === "admin" ? (
+                <Button
+                  onClick={() => void handleSaveProfile()}
+                  disabled={manageBusy || !manageName.trim()}
+                >
+                  <IconCheck width={14} height={14} />
+                  {manageBusy ? "Salvando…" : "Salvar nome e perfil"}
+                </Button>
+              ) : null}
+            </>
+          ) : null
+        }
+      >
+        {managed ? (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <RoleBadge role={managed.role} />
+              <Badge tone={managed.hasPassword ? "emerald" : "slate"}>
+                <IconLock width={10} height={10} />
+                {managed.hasPassword ? "Senha individual ativa" : "Sem senha individual"}
+              </Badge>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                {managed.source === "escola" ? "Lista fixa da escola" : "Cadastro admin"}
+              </span>
+            </div>
+
+            <Field label="Nome completo">
+              <input
+                type="text"
+                value={manageName}
+                onChange={(event) => setManageName(event.target.value)}
+                disabled={managed.source === "escola" || manageBusy}
+                className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
+              />
+            </Field>
+
+            <div>
+              <span className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Perfil
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                {(["aluno", "professor"] as UserRole[]).map((role) => {
+                  const Icon =
+                    role === "professor" ? IconPresentation : IconGraduationCap;
+                  const active = manageRole === role;
+                  return (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => setManageRole(role)}
+                      disabled={managed.source === "escola" || manageBusy}
+                      aria-pressed={active}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                        active
+                          ? "border-indigo-400 bg-indigo-50 text-indigo-700 dark:border-indigo-400/50 dark:bg-indigo-500/15 dark:text-indigo-200"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <Icon width={16} height={16} />
+                      {roleLabel(role)}
+                      {active ? (
+                        <IconCheck width={13} height={13} className="ml-auto" />
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+              {managed.source === "escola" ? (
+                <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  Conta da lista fixa da escola: nome e perfil não podem ser
+                  alterados por aqui. Você ainda pode definir a senha.
+                </p>
+              ) : null}
+            </div>
+
+            <div className="rounded-xl border border-slate-200 p-3.5 dark:border-slate-700">
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                <IconLock width={14} height={14} className="text-indigo-500 dark:text-indigo-400" />
+                Senha de acesso
+              </p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                {managed.hasPassword
+                  ? "Esta conta entra com e-mail e a senha definida aqui."
+                  : "Esta conta ainda não tem senha individual — só entra com Google ou senha mestra."}
+              </p>
+
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="password"
+                  value={managePassword}
+                  onChange={(event) => setManagePassword(event.target.value)}
+                  placeholder="Nova senha (mínimo 8 caracteres)"
+                  autoComplete="new-password"
+                  disabled={manageBusy}
+                  className={`${inputClass} sm:flex-1`}
+                />
+                <Button
+                  onClick={() => void handleSavePassword()}
+                  disabled={manageBusy || managePassword.length < 8}
+                  className="shrink-0"
+                >
+                  <IconCheck width={14} height={14} />
+                  {managed.hasPassword ? "Redefinir" : "Definir senha"}
+                </Button>
+              </div>
+
+              {managed.hasPassword ? (
+                <button
+                  type="button"
+                  onClick={() => setPasswordRemoveTarget(managed)}
+                  disabled={manageBusy}
+                  className="mt-2 text-[11px] font-semibold text-rose-600 underline underline-offset-2 disabled:opacity-50 dark:text-rose-400"
+                >
+                  Remover senha desta conta
+                </button>
+              ) : null}
+            </div>
+
+            {manageError ? (
+              <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-[11px] font-medium text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                <IconAlert width={14} height={14} className="mt-0.5 shrink-0" />
+                {manageError}
+              </div>
+            ) : null}
+
+            {managed.source === "admin" && !managed.admin ? (
+              <div className="rounded-xl border border-rose-200 p-3.5 dark:border-rose-500/30">
+                <p className="text-xs font-semibold text-rose-700 dark:text-rose-300">
+                  Remover cadastro
+                </p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                  A conta deixa de poder entrar e a senha individual também é
+                  apagada. Você pode cadastrar novamente depois.
+                </p>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => setRemoveTarget(managed)}
+                  disabled={manageBusy}
+                  className="mt-2"
+                >
+                  Remover {managed.email}
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </Modal>
+
+      <ConfirmDialog
+        open={Boolean(removeTarget)}
+        onClose={() => setRemoveTarget(null)}
+        onConfirm={() => {
+          if (removeTarget) void handleRemoveUser(removeTarget);
+        }}
+        title="Remover este e-mail?"
+        description={`${removeTarget?.email ?? ""} perderá o acesso ao site e a senha individual será apagada.`}
+        confirmLabel="Remover"
+      />
+
+      <ConfirmDialog
+        open={Boolean(passwordRemoveTarget)}
+        onClose={() => setPasswordRemoveTarget(null)}
+        onConfirm={() => {
+          if (passwordRemoveTarget) void handleRemovePassword(passwordRemoveTarget);
+        }}
+        title="Remover a senha?"
+        description={`${passwordRemoveTarget?.email ?? ""} deixará de entrar com senha e precisará do login com Google ou da senha mestra.`}
+        confirmLabel="Remover senha"
+      />
 
       <Toast message={toast} tone={toastTone} onClose={closeToast} />
     </div>

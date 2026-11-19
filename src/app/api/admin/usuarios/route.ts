@@ -1,8 +1,10 @@
 /**
- * Painel do administrador: lista de contas e cadastro direto.
+ * Painel do administrador: lista de contas, cadastro direto e gerenciamento.
  *
- * GET  → contas cadastradas + solicitações.
- * POST → cadastra um e-mail como aluno ou professor.
+ * GET    → contas cadastradas (+ se já têm senha) e solicitações.
+ * POST   → cadastra um e-mail como aluno ou professor.
+ * PATCH  → define/remove senha ou edita nome/perfil de uma conta.
+ * DELETE → remove uma conta criada pelo administrador (?email=...).
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { validateEmail } from "@/lib/email";
@@ -12,6 +14,10 @@ import {
   addAppUser,
   listAppUsers,
   listSolicitacoesDoAdmin,
+  removeAppUser,
+  removeAppUserPassword,
+  setAppUserPassword,
+  updateAppUser,
 } from "@/lib/users";
 
 export const runtime = "nodejs";
@@ -119,6 +125,119 @@ export async function POST(request: NextRequest) {
             : "Não foi possível cadastrar este e-mail agora.",
       },
       { status: duplicate ? 409 : 503, headers: noStoreHeaders() },
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  const invalidRequest = requireSameOrigin(request);
+  if (invalidRequest) return invalidRequest;
+
+  const auth = await requireAdmin(request);
+  if (auth.error) return auth.error;
+
+  const body = (await request.json().catch(() => null)) as
+    | {
+        action?: unknown;
+        email?: unknown;
+        password?: unknown;
+        name?: unknown;
+        role?: unknown;
+      }
+    | null;
+
+  const action =
+    body?.action === "senha" ||
+    body?.action === "remover-senha" ||
+    body?.action === "editar"
+      ? body.action
+      : null;
+
+  const rawEmail = typeof body?.email === "string" ? body.email : "";
+  const result = validateEmail(rawEmail);
+
+  if (!action || !result.ok) {
+    return NextResponse.json(
+      { ok: false, error: "Ação ou e-mail inválido." },
+      { status: 400, headers: noStoreHeaders() },
+    );
+  }
+
+  try {
+    if (action === "senha") {
+      const password = typeof body?.password === "string" ? body.password : "";
+      const user = await setAppUserPassword(result.email, password);
+      return NextResponse.json(
+        { ok: true, user: { ...user, hasPassword: true } },
+        { headers: noStoreHeaders() },
+      );
+    }
+
+    if (action === "remover-senha") {
+      const user = await removeAppUserPassword(result.email);
+      return NextResponse.json(
+        { ok: true, user: { ...user, hasPassword: false } },
+        { headers: noStoreHeaders() },
+      );
+    }
+
+    const user = await updateAppUser(result.email, {
+      name: typeof body?.name === "string" ? body.name : undefined,
+      role:
+        body?.role === "professor" || body?.role === "aluno"
+          ? body.role
+          : undefined,
+    });
+    return NextResponse.json(
+      { ok: true, user },
+      { headers: noStoreHeaders() },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível atualizar esta conta agora.",
+      },
+      { status: 400, headers: noStoreHeaders() },
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const invalidRequest = requireSameOrigin(request);
+  if (invalidRequest) return invalidRequest;
+
+  const auth = await requireAdmin(request);
+  if (auth.error) return auth.error;
+
+  const rawEmail = request.nextUrl.searchParams.get("email") ?? "";
+  const result = validateEmail(rawEmail);
+  if (!result.ok) {
+    return NextResponse.json(
+      { ok: false, error: "E-mail inválido." },
+      { status: 400, headers: noStoreHeaders() },
+    );
+  }
+
+  try {
+    const user = await removeAppUser(result.email);
+    return NextResponse.json(
+      { ok: true, email: user.email },
+      { headers: noStoreHeaders() },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível remover este e-mail agora.",
+      },
+      { status: 400, headers: noStoreHeaders() },
     );
   }
 }
