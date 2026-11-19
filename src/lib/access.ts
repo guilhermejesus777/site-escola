@@ -58,7 +58,6 @@ export const REGISTERED_STUDENTS: string[] = [
   "joel.gregorio.neto@escola.pr.gov.br",
   "dibner.garcia@escola.pr.gov.br",
   "ramos.bruno08@escola.pr.gov.br",
-  "izabella.honorato.santos@escola.pr.gov.br",
   "ricardo.palhano@escola.pr.gov.br",
 ];
 
