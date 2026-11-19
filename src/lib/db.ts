@@ -419,20 +419,26 @@ export async function insertSolicitacao(request: StoredRequest): Promise<void> {
 export async function setSolicitacaoStatus(
   id: string,
   status: "aprovada" | "recusada",
+  role?: "professor" | "aluno",
 ): Promise<boolean> {
   if (!HAS_DB) {
     const current = memoryRequests().get(id);
     if (!current) return false;
-    memoryRequests().set(id, { ...current, status });
+    memoryRequests().set(id, { ...current, status, role: role ?? current.role });
     return true;
   }
 
   const pool = getPool();
   await ensureSchema();
-  const result = await pool.query(
-    "UPDATE solicitacoes SET status = $1 WHERE id = $2",
-    [status, id],
-  );
+  const result = role
+    ? await pool.query(
+        "UPDATE solicitacoes SET status = $1, role = $2 WHERE id = $3",
+        [status, role, id],
+      )
+    : await pool.query("UPDATE solicitacoes SET status = $1 WHERE id = $2", [
+        status,
+        id,
+      ]);
   return (result.rowCount ?? 0) > 0;
 }
 

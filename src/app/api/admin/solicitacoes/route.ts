@@ -25,11 +25,13 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json().catch(() => null)) as
-    | { id?: unknown; action?: unknown }
+    | { id?: unknown; action?: unknown; role?: unknown }
     | null;
 
   const id = typeof body?.id === "string" ? body.id : "";
   const action = body?.action === "aprovar" || body?.action === "recusar" ? body.action : null;
+  const role =
+    body?.role === "professor" || body?.role === "aluno" ? body.role : undefined;
 
   if (!id || !action) {
     return NextResponse.json(
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const updated = await decideSolicitacao(id, action);
+    const updated = await decideSolicitacao(id, action, role);
     return NextResponse.json(
       { ok: true, request: updated },
       { headers: noStoreHeaders() },

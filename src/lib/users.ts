@@ -159,6 +159,7 @@ export type RequestAction = "aprovar" | "recusar";
 export async function decideSolicitacao(
   id: string,
   action: RequestAction,
+  roleOverride?: UserRole,
 ): Promise<StoredRequest> {
   const request = await getSolicitacao(id);
   if (!request) throw new Error("Solicitação não encontrada.");
@@ -175,13 +176,20 @@ export async function decideSolicitacao(
       throw error;
     }
 
+    // O administrador pode aprovar com um perfil diferente do que a pessoa
+    // pediu (por exemplo, pediu professor, mas foi aprovada como aluno).
+    const role: UserRole =
+      roleOverride === "professor" || roleOverride === "aluno"
+        ? roleOverride
+        : request.role;
+
     await addAppUser({
       email: request.email,
       name: request.name,
-      role: request.role,
+      role,
     });
-    await setSolicitacaoStatus(id, "aprovada");
-    return { ...request, status: "aprovada" };
+    await setSolicitacaoStatus(id, "aprovada", role);
+    return { ...request, role, status: "aprovada" };
   }
 
   await setSolicitacaoStatus(id, "recusada");

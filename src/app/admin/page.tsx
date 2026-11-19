@@ -77,6 +77,7 @@ export default function AdminPage() {
   const [adding, setAdding] = useState(false);
 
   const [decidingId, setDecidingId] = useState<string | null>(null);
+  const [grantedRoles, setGrantedRoles] = useState<Record<string, UserRole>>({});
   const [switching, setSwitching] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"success" | "error">("success");
@@ -192,13 +193,17 @@ export default function AdminPage() {
     }
   }
 
-  async function handleDecision(id: string, action: "aprovar" | "recusar") {
+  async function handleDecision(
+    id: string,
+    action: "aprovar" | "recusar",
+    role?: UserRole,
+  ) {
     setDecidingId(id);
     try {
       const response = await fetch("/api/admin/solicitacoes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, action }),
+        body: JSON.stringify(role ? { id, action, role } : { id, action }),
       });
       const data = (await response.json().catch(() => null)) as {
         ok?: boolean;
@@ -217,6 +222,12 @@ export default function AdminPage() {
           ? "Solicitação aprovada! A pessoa já pode entrar."
           : "Solicitação recusada.",
       );
+      setGrantedRoles((current) => {
+        if (!(id in current)) return current;
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
       await load();
     } catch {
       setToastTone("error");
@@ -446,10 +457,65 @@ export default function AdminPage() {
                       Enviada em {formatDate(request.createdAt)}
                     </p>
 
+                    {(() => {
+                      const granted = grantedRoles[request.id] ?? request.role;
+                      return (
+                        <div className="mt-3">
+                          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                            Aprovar como
+                          </span>
+                          <div className="grid grid-cols-2 gap-2">
+                            {(["aluno", "professor"] as UserRole[]).map((role) => {
+                              const Icon =
+                                role === "professor" ? IconPresentation : IconGraduationCap;
+                              const active = granted === role;
+                              return (
+                                <button
+                                  key={role}
+                                  type="button"
+                                  onClick={() =>
+                                    setGrantedRoles((current) => ({
+                                      ...current,
+                                      [request.id]: role,
+                                    }))
+                                  }
+                                  aria-pressed={active}
+                                  disabled={decidingId === request.id}
+                                  className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-[11px] font-semibold transition disabled:cursor-default ${
+                                    active
+                                      ? "border-indigo-400 bg-indigo-50 text-indigo-700 dark:border-indigo-400/50 dark:bg-indigo-500/15 dark:text-indigo-200"
+                                      : "border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  }`}
+                                >
+                                  <Icon width={14} height={14} />
+                                  {roleLabel(role)}
+                                  {active ? (
+                                    <IconCheck width={12} height={12} className="ml-auto" />
+                                  ) : null}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {granted !== request.role ? (
+                            <p className="mt-1 text-[10px] text-amber-600 dark:text-amber-400">
+                              A pessoa pediu {roleLabel(request.role).toLowerCase()}; será
+                              cadastrada como {roleLabel(granted).toLowerCase()}.
+                            </p>
+                          ) : null}
+                        </div>
+                      );
+                    })()}
+
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                       <Button
                         size="sm"
-                        onClick={() => void handleDecision(request.id, "aprovar")}
+                        onClick={() =>
+                          void handleDecision(
+                            request.id,
+                            "aprovar",
+                            grantedRoles[request.id] ?? request.role,
+                          )
+                        }
                         disabled={decidingId === request.id}
                         className="flex-1"
                       >
