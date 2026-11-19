@@ -208,6 +208,65 @@ export async function createPasswordHashIfMissing(
   return (result.rowCount ?? 0) > 0;
 }
 
+/**
+ * Define (ou redefine) a senha individual de um e-mail. Usado pelo
+ * administrador no painel de contas.
+ */
+export async function setPasswordHash(
+  email: string,
+  hash: string,
+): Promise<void> {
+  const normalized = normalizeEmail(email);
+
+  if (!HAS_DB) {
+    memoryPasswords().set(normalized, {
+      hash,
+      updatedAt: new Date().toISOString(),
+    });
+    return;
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  await pool.query(
+    `INSERT INTO senhas (email, password_hash, updated_at)
+     VALUES ($1, $2, now())
+     ON CONFLICT (email) DO UPDATE
+       SET password_hash = EXCLUDED.password_hash, updated_at = now()`,
+    [normalized, hash],
+  );
+}
+
+/** Apaga a senha individual de um e-mail. */
+export async function deletePasswordHash(email: string): Promise<boolean> {
+  const normalized = normalizeEmail(email);
+
+  if (!HAS_DB) {
+    return memoryPasswords().delete(normalized);
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query("DELETE FROM senhas WHERE email = $1", [
+    normalized,
+  ]);
+  return (result.rowCount ?? 0) > 0;
+}
+
+/** E-mails que já têm senha individual cadastrada. */
+export async function listPasswordEmails(): Promise<string[]> {
+  if (!HAS_DB) {
+    return Array.from(memoryPasswords().keys());
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query<{ email: string }>(
+    "SELECT email FROM senhas ORDER BY email",
+  );
+  return result.rows.map((row) => row.email);
+}
+
 /* ------------------------- Usuários e solicitações ------------------------- */
 
 export type StoredUser = {
@@ -314,6 +373,45 @@ export async function insertExtraUser(user: StoredUser): Promise<void> {
      ON CONFLICT (email) DO NOTHING`,
     [normalized, user.name, user.role],
   );
+}
+
+/** Atualiza nome e perfil de uma conta criada pelo administrador. */
+export async function updateExtraUser(
+  email: string,
+  changes: { name: string; role: "professor" | "aluno" },
+): Promise<boolean> {
+  const normalized = normalizeEmail(email);
+
+  if (!HAS_DB) {
+    const current = memoryUsers().get(normalized);
+    if (!current) return false;
+    memoryUsers().set(normalized, { ...current, ...changes });
+    return true;
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query(
+    "UPDATE usuarios SET name = $1, role = $2 WHERE email = $3",
+    [changes.name, changes.role, normalized],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+/** Remove uma conta criada pelo administrador. */
+export async function deleteExtraUser(email: string): Promise<boolean> {
+  const normalized = normalizeEmail(email);
+
+  if (!HAS_DB) {
+    return memoryUsers().delete(normalized);
+  }
+
+  const pool = getPool();
+  await ensureSchema();
+  const result = await pool.query("DELETE FROM usuarios WHERE email = $1", [
+    normalized,
+  ]);
+  return (result.rowCount ?? 0) > 0;
 }
 
 export async function listSolicitacoes(): Promise<StoredRequest[]> {

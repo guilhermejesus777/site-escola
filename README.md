@@ -94,6 +94,10 @@ Na área **Admin** (`/admin`) é possível:
 - **entrar como aluno ou professor** a qualquer momento (o perfil ativo muda
   sem sair da conta);
 - **cadastrar um e-mail** informando o nome e escolhendo o perfil da pessoa;
+- **gerenciar as contas** na lista “Contas cadastradas”: abrir **Gerenciar** para
+  definir ou redefinir a **senha individual** com que a pessoa entra, trocar nome
+  e perfil (contas cadastradas pelo admin) e remover o cadastro. Contas da lista
+  fixa da escola não podem ser editadas nem removidas, mas aceitam senha;
 - **analisar solicitações**: quem ainda não tem conta pode clicar em
   **“Ainda não tem cadastro? Solicitar acesso”** na tela de login, informar um
   e-mail `@escola.pr.gov.br`, o perfil desejado e uma mensagem. O pedido fica

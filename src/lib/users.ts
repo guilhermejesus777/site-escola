@@ -14,17 +14,23 @@ import {
   type RegisteredUser,
 } from "@/lib/access";
 import {
+  deleteExtraUser,
+  deletePasswordHash,
   getExtraUser,
   getSolicitacao,
   insertExtraUser,
   insertSolicitacao,
   listExtraUsers,
+  listPasswordEmails,
   listSolicitacoes,
+  setPasswordHash,
   setSolicitacaoStatus,
+  updateExtraUser,
   type StoredRequest,
   type StoredUser,
 } from "@/lib/db";
 import { normalizeEmail } from "@/lib/email";
+import { hashPassword } from "@/lib/password";
 import type { UserRole } from "@/types";
 
 export type AppUser = {
@@ -34,6 +40,8 @@ export type AppUser = {
   admin: boolean;
   source: "escola" | "admin";
 };
+
+export type AdminUser = AppUser & { hasPassword: boolean };
 
 function withAdmin(user: RegisteredUser | StoredUser, source: AppUser["source"]): AppUser {
   return {
@@ -58,15 +66,24 @@ export async function findAppUser(email: string): Promise<AppUser | null> {
   return null;
 }
 
-export async function listAppUsers(): Promise<AppUser[]> {
-  const map = new Map<string, AppUser>();
+export async function listAppUsers(): Promise<AdminUser[]> {
+  const map = new Map<string, AdminUser>();
+  const withPassword = new Set(await listPasswordEmails());
 
   for (const user of listRegisteredUsers()) {
-    map.set(user.email, withAdmin(user, "escola"));
+    map.set(user.email, {
+      ...withAdmin(user, "escola"),
+      hasPassword: withPassword.has(user.email),
+    });
   }
 
   for (const user of await listExtraUsers()) {
-    if (!map.has(user.email)) map.set(user.email, withAdmin(user, "admin"));
+    if (!map.has(user.email)) {
+      map.set(user.email, {
+        ...withAdmin(user, "admin"),
+        hasPassword: withPassword.has(user.email),
+      });
+    }
   }
 
   return Array.from(map.values()).sort((a, b) =>
@@ -194,4 +211,99 @@ export async function decideSolicitacao(
 
   await setSolicitacaoStatus(id, "recusada");
   return { ...request, status: "recusada" };
+}
+
+/* ---------------------- Gerenciamento pelo administrador ---------------------- */
+
+export const MIN_PASSWORD_LENGTH = 8;
+export const MAX_PASSWORD_LENGTH = 200;
+
+function checkPassword(password: string): void {
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    throw new Error(
+      `A senha precisa ter pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`,
+    );
+  }
+  if (password.length > MAX_PASSWORD_LENGTH) {
+    throw new Error("A senha é muito longa.");
+  }
+}
+
+/** Cria ou redefine a senha individual de um e-mail cadastrado. */
+export async function setAppUserPassword(
+  email: string,
+  password: string,
+): Promise<AppUser> {
+  checkPassword(password);
+
+  const user = await findAppUser(email);
+  if (!user) throw new Error("Este e-mail não está cadastrado.");
+
+  await setPasswordHash(user.email, hashPassword(password));
+  return user;
+}
+
+/** Apaga a senha individual, voltando a exigir Google/senha mestra. */
+export async function removeAppUserPassword(
+  email: string,
+): Promise<AppUser> {
+  const user = await findAppUser(email);
+  if (!user) throw new Error("Este e-mail não está cadastrado.");
+
+  await deletePasswordHash(user.email);
+  return user;
+}
+
+export type UpdateUserInput = {
+  name?: string;
+  role?: UserRole;
+};
+
+/** Edita nome/perfil de uma conta criada pelo administrador. */
+export async function updateAppUser(
+  email: string,
+  input: UpdateUserInput,
+): Promise<AppUser> {
+  const user = await findAppUser(email);
+  if (!user) throw new Error("Este e-mail não está cadastrado.");
+  if (user.source === "escola") {
+    throw new Error(
+      "Contas da lista fixa da escola não podem ser editadas — só remover a senha ou cadastrar uma nova.",
+    );
+  }
+
+  const name = (input.name ?? user.name).trim();
+  if (name.length < 2 || name.length > 100) {
+    throw new Error("Informe o nome completo da pessoa.");
+  }
+
+  const role: UserRole =
+    input.role === "professor" || input.role === "aluno"
+      ? input.role
+      : user.role;
+
+  const updated = await updateExtraUser(user.email, { name, role });
+  if (!updated) throw new Error("Este e-mail não está mais cadastrado.");
+
+  return { ...user, name, role };
+}
+
+/** Remove uma conta criada pelo administrador (e a senha dela). */
+export async function removeAppUser(email: string): Promise<AppUser> {
+  const user = await findAppUser(email);
+  if (!user) throw new Error("Este e-mail não está cadastrado.");
+  if (user.source === "escola") {
+    throw new Error(
+      "Contas da lista fixa da escola não podem ser removidas por aqui.",
+    );
+  }
+  if (isAdminEmail(user.email)) {
+    throw new Error("A conta do administrador não pode ser removida.");
+  }
+
+  const removed = await deleteExtraUser(user.email);
+  if (!removed) throw new Error("Este e-mail não está mais cadastrado.");
+  await deletePasswordHash(user.email);
+
+  return user;
 }
