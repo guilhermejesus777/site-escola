@@ -764,7 +764,7 @@ export function LoginScreen() {
         description={
           requestDone
             ? undefined
-            : "Use um e-mail @escola.pr.gov.br. O administrador precisa aprovar o pedido."
+            : "Use um e-mail @escola.pr.gov.br ou @gmail.com. O administrador precisa aprovar o pedido."
         }
         footer={
           requestDone ? (
@@ -816,7 +816,7 @@ export function LoginScreen() {
 
             <label className="block">
               <span className="mb-1.5 block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                E-mail @escola
+                E-mail (@escola ou @gmail)
               </span>
               <span className="relative block">
                 <IconMail
@@ -830,7 +830,7 @@ export function LoginScreen() {
                   inputMode="email"
                   value={requestEmail}
                   onChange={(event) => setRequestEmail(event.target.value)}
-                  placeholder="seu.email@escola.pr.gov.br"
+                  placeholder="seu.email@escola.pr.gov.br ou @gmail.com"
                   className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600"
                 />
               </span>

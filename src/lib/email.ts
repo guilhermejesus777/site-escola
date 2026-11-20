@@ -20,6 +20,22 @@ export function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
+/**
+ * Domínios aceitos nas solicitações de acesso.
+ *
+ * A coordenação libera a conta depois; por isso aceitamos também o Gmail, que
+ * é o que alunos e responsáveis costumam usar fora do domínio da escola.
+ * Acrescente outros domínios aqui se precisar.
+ */
+export const REQUEST_DOMAINS = ["escola.pr.gov.br", "gmail.com"] as const;
+
+export function isRequestDomainAllowed(email: string): boolean {
+  const domain = domainOf(email);
+  return REQUEST_DOMAINS.some(
+    (allowed) => domain === allowed || domain.endsWith(`.${allowed}`),
+  );
+}
+
 export function domainOf(email: string): string {
   return normalizeEmail(email).split("@")[1] ?? "";
 }
