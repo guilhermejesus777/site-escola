@@ -1,18 +1,21 @@
 /**
  * Solicitação de cadastro feita por quem ainda não tem acesso.
  *
- * A pessoa informa o e-mail @escola.pr.gov.br e o perfil desejado. Nada é
- * liberado na hora: o administrador precisa aprovar a solicitação no painel.
+ * A pessoa informa o e-mail (@escola.pr.gov.br ou @gmail.com) e o perfil
+ * desejado. Nada é liberado na hora: o administrador precisa aprovar a
+ * solicitação no painel.
  */
 import { NextResponse, type NextRequest } from "next/server";
-import { domainOf, normalizeEmail, validateEmail } from "@/lib/email";
+import {
+  isRequestDomainAllowed,
+  normalizeEmail,
+  validateEmail,
+} from "@/lib/email";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { noStoreHeaders, requireSameOrigin } from "@/lib/security";
 import { createSolicitacao } from "@/lib/users";
 
 export const runtime = "nodejs";
-
-const ESCOLA_DOMAIN = "escola.pr.gov.br";
 
 export async function POST(request: NextRequest) {
   const invalidRequest = requireSameOrigin(request);
@@ -52,11 +55,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (domainOf(result.email) !== ESCOLA_DOMAIN) {
+  if (!isRequestDomainAllowed(result.email)) {
     return NextResponse.json(
       {
         ok: false,
-        error: "A solicitação precisa ser feita com um e-mail @escola.pr.gov.br.",
+        error:
+          "A solicitação precisa ser feita com um e-mail @escola.pr.gov.br ou @gmail.com.",
       },
       { status: 400, headers: noStoreHeaders() },
     );

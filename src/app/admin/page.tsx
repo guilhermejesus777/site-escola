@@ -544,7 +544,7 @@ export default function AdminPage() {
                 Solicitações de acesso
               </h2>
               <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
-                Pedidos enviados por e-mails @escola que ainda não têm conta.
+                Pedidos enviados por e-mails @escola ou @gmail que ainda não têm conta.
               </p>
             </div>
             <Badge tone={pending.length > 0 ? "amber" : "slate"}>

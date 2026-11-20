@@ -100,10 +100,10 @@ Na área **Admin** (`/admin`) é possível:
   fixa da escola não podem ser editadas nem removidas, mas aceitam senha;
 - **analisar solicitações**: quem ainda não tem conta pode clicar em
   **“Ainda não tem cadastro? Solicitar acesso”** na tela de login, informar um
-  e-mail `@escola.pr.gov.br`, o perfil desejado e uma mensagem. O pedido fica
-  pendente até o administrador **aprovar** ou **recusar**. Na aprovação, o
-  administrador escolhe o perfil final (aluno ou professor), que pode ser
-  diferente do perfil pedido;
+  e-mail `@escola.pr.gov.br` ou `@gmail.com`, o perfil desejado e uma mensagem.
+  O pedido fica pendente até o administrador **aprovar** ou **recusar**. Na
+  aprovação, o administrador escolhe o perfil final (aluno ou professor), que
+  pode ser diferente do perfil pedido;
 - consultar todas as contas cadastradas e o histórico das solicitações.
 
 As contas criadas pelo administrador e as solicitações ficam no PostgreSQL
