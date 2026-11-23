@@ -30,7 +30,6 @@ export function isAdminEmail(email: string): boolean {
 export const REGISTERED_TEACHERS: RegisteredTeacher[] = [
   // Cadastro real da coordenação. Adicione novos professores no mesmo formato:
   // { email: "nome.sobrenome@escola.pr.gov.br", name: "Nome Sobrenome" },
-  { email: "cesar.chauchuty@escola.pr.gov.br", name: "Cesar Chauchuty" },
   { email: "guilherme.jesus24@escola.pr.gov.br", name: "Guilherme Jesus" },
 ];
 
