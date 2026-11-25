@@ -1,8 +1,9 @@
 /**
  * Professores autorizados a entrar com o perfil de professor.
  *
- * O app é um protótipo: esta lista fica no navegador. Em produção, os
- * professores devem ser cadastrados no banco e o acesso validado no servidor.
+ * Só o administrador fica na lista fixa. Qualquer outro professor precisa
+ * enviar uma solicitação de cadastro e ser aprovado em `/admin`. As contas
+ * aprovadas ficam na tabela `usuarios` do banco.
  */
 export type RegisteredTeacher = {
   email: string;
@@ -50,15 +51,13 @@ export const REGISTERED_TEACHERS_LABEL = REGISTERED_TEACHERS.map(
 /**
  * Alunos autorizados a entrar com o perfil de aluno.
  *
+ * A lista está vazia de propósito: todos (alunos e professores) precisam
+ * enviar uma solicitação de cadastro e ser aprovados pelo administrador em
+ * `/admin`. As contas aprovadas ficam na tabela `usuarios` do banco.
+ *
  * O nome exibido vem da conta Google do aluno no momento do login.
  */
-export const REGISTERED_STUDENTS: string[] = [
-  "gelinski.renato@escola.pr.gov.br",
-  "joel.gregorio.neto@escola.pr.gov.br",
-  "dibner.garcia@escola.pr.gov.br",
-  "ramos.bruno08@escola.pr.gov.br",
-  "ricardo.palhano@escola.pr.gov.br",
-];
+export const REGISTERED_STUDENTS: string[] = [];
 
 export function findRegisteredStudent(email: string): string | undefined {
   const normalized = email.trim().toLowerCase();
