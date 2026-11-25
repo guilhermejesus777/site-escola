@@ -432,6 +432,38 @@ export function LoginScreen() {
               </p>
 
               <div className="mt-5 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => openRequest()}
+                  className="group flex w-full items-center gap-3 rounded-2xl border border-dashed border-indigo-300 bg-indigo-50/40 px-4 py-3.5 text-left transition hover:border-indigo-400 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-indigo-400/40 dark:bg-indigo-500/10 dark:hover:border-indigo-400/60 dark:hover:bg-indigo-500/15"
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">
+                    <IconMail width={21} height={21} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      Cadastro
+                    </span>
+                    <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                      Se ainda não fez acesso, faça o cadastro e aguarde a aprovação do
+                      administrador.
+                    </span>
+                  </span>
+                  <IconArrowRight
+                    width={17}
+                    height={17}
+                    className="shrink-0 text-indigo-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-500 dark:text-indigo-500/70 dark:group-hover:text-indigo-300"
+                  />
+                </button>
+
+                <div className="flex items-center gap-3 pt-1">
+                  <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                    Já tem cadastro? Entre com o seu perfil
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+                </div>
+
                 {(Object.keys(ROLES) as UserRole[]).map((key) => {
                   const info = ROLES[key];
                   const Icon = info.icon;
@@ -463,29 +495,6 @@ export function LoginScreen() {
                     </button>
                   );
                 })}
-
-                <button
-                  type="button"
-                  onClick={() => openRequest()}
-                  className="group flex w-full items-center gap-3 rounded-2xl border border-dashed border-indigo-300 bg-indigo-50/40 px-4 py-3.5 text-left transition hover:border-indigo-400 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-indigo-400/40 dark:bg-indigo-500/10 dark:hover:border-indigo-400/60 dark:hover:bg-indigo-500/15"
-                >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">
-                    <IconMail width={21} height={21} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      Cadastro
-                    </span>
-                    <span className="mt-0.5 block text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-                      Ainda não tem acesso? Envie seu pedido — o administrador aprova e você entra.
-                    </span>
-                  </span>
-                  <IconArrowRight
-                    width={17}
-                    height={17}
-                    className="shrink-0 text-indigo-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-500 dark:text-indigo-500/70 dark:group-hover:text-indigo-300"
-                  />
-                </button>
               </div>
 
               <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
