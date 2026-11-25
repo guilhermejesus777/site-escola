@@ -328,15 +328,6 @@ html[data-escola="on"] .dark\:text-slate-300 {
   animation: fade-in 0.3s ease-out both;
 }
 
-/* Controles touch do Pipa Combate */
-.touch-btn {
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  pointer-events: auto;
-}
-
 @media print {
   aside,
   header,

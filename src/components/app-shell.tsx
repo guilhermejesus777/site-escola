@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { useState } from "react";
 import {
-  IconBall,
   IconBook,
   IconCalendar,
   IconHome,
@@ -31,7 +30,6 @@ type NavItem = {
 
 const NAV: NavItem[] = [
   { href: "/", label: "Início", icon: IconHome },
-  { href: "/jogo", label: "Pipa Combate", icon: IconBall },
   { href: "/reservas", label: "Reservas", icon: IconCalendar },
   { href: "/atividades", label: "Provas e atividades", shortLabel: "Atividades", icon: IconBook },
   { href: "/configuracoes", label: "Configurações", shortLabel: "Ajustes", icon: IconSettings, professorOnly: true },

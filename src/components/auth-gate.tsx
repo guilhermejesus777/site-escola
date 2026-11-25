@@ -7,7 +7,7 @@ import { LoginScreen } from "@/components/login-screen";
 import { useStore } from "@/lib/store";
 
 /** Rotas públicas, que precisam abrir mesmo sem login. */
-const PUBLIC_PATHS = ["/privacidade", "/termos", "/jogo"];
+const PUBLIC_PATHS = ["/privacidade", "/termos"];
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const { user } = useStore();
