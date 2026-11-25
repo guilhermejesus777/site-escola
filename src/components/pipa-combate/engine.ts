@@ -1,6 +1,8 @@
 import type { GameMap, GameState, KiteState, KiteId, PilotInput, Vec } from "./types";
 import { getMap } from "./maps";
 import { getKite } from "./kites";
+import { getLine, DEFAULT_LINE_ID } from "./lines";
+import type { LineDef } from "./lines";
 
 const TENSION_PULL_RATE = 95;
 const TENSION_RELEASE_RATE = 75;
@@ -25,17 +27,18 @@ export function anchorOf(map: GameMap, owner: number): Vec {
   return { x: map.width * side, y: map.height - 70 };
 }
 
-export function spawnKites(map: GameMap, kiteA: KiteId, kiteB: KiteId): [KiteState, KiteState] {
+export function spawnKites(map: GameMap, kiteA: KiteId, kiteB: KiteId, lineA: LineDef, lineB: LineDef): [KiteState, KiteState] {
   const a = getKite(kiteA);
   const b = getKite(kiteB);
   const anchorA = anchorOf(map, 0);
   const anchorB = anchorOf(map, 1);
+  const startY = (size: number) => (map.hasWater ? map.waterY - size * 3 - 8 : map.height * 0.5 - 90 - size * 2);
   const kites: KiteState[] = [
     {
       def: a,
       owner: 0,
       x: anchorA.x,
-      y: map.hasWater ? map.waterY - a.size * 3 - 8 : anchorA.y - a.size * 4,
+      y: startY(a.size),
       vx: 0,
       vy: 0,
       heading: -Math.PI / 2,
@@ -46,12 +49,13 @@ export function spawnKites(map: GameMap, kiteA: KiteId, kiteB: KiteId): [KiteSta
       maxHp: a.hp,
       active: true,
       trail: [],
+      line: lineA,
     },
     {
       def: b,
       owner: 1,
       x: anchorB.x,
-      y: map.hasWater ? map.waterY - b.size * 3 - 8 : anchorB.y - b.size * 4,
+      y: startY(b.size),
       vx: 0,
       vy: 0,
       heading: -Math.PI / 2,
@@ -62,14 +66,15 @@ export function spawnKites(map: GameMap, kiteA: KiteId, kiteB: KiteId): [KiteSta
       maxHp: b.hp,
       active: true,
       trail: [],
+      line: lineB,
     },
   ];
   return [kites[0], kites[1]];
 }
 
-export function startFight(state: GameState, mapId: string, kiteA: KiteId, kiteB: KiteId, mode: "pvp" | "ai"): GameState {
+export function startFight(state: GameState, mapId: string, kiteA: KiteId, kiteB: KiteId, mode: "pvp" | "ai", lineA?: string, lineB?: string): GameState {
   const map = getMap(mapId);
-  const kites = spawnKites(map, kiteA, kiteB);
+  const kites = spawnKites(map, kiteA, kiteB, getLine(lineA ?? DEFAULT_LINE_ID), getLine(lineB ?? DEFAULT_LINE_ID));
   return {
     ...state,
     phase: "countdown",
@@ -99,19 +104,22 @@ function aiControl(kite: KiteState, enemy: KiteState): PilotInput {
   return { pull, steer, targetTension: desiredTension };
 }
 
-function stepKite(kite: KiteState, map: GameMap, input: PilotInput, dt: number): KiteState {
+function stepKite(kite: KiteState, map: GameMap, input: PilotInput, dt: number, line: LineDef): KiteState {
   if (!kite.active) return kite;
+
+  const puxar = line.poder.puxar;
+  const descarregar = line.poder.descarregar;
 
   let tension = kite.tension;
   if (input.targetTension !== undefined) {
     tension = Math.max(0, Math.min(kite.def.maxTension, tension + (input.targetTension - tension) * Math.min(1, dt * 2.5)));
   } else if (input.pull > 0) {
-    tension = Math.min(kite.def.maxTension, tension + TENSION_PULL_RATE * dt);
+    tension = Math.min(kite.def.maxTension, tension + TENSION_PULL_RATE * puxar * dt);
   } else {
-    tension = Math.max(0, tension - TENSION_RELEASE_RATE * dt);
+    tension = Math.max(0, tension - TENSION_RELEASE_RATE * descarregar * dt);
   }
 
-  const thrust = Math.pow(tension / 100, kite.def.tensionPower) * kite.def.thrust;
+  const thrust = Math.pow(tension / 100, kite.def.tensionPower) * kite.def.thrust * puxar;
   const dirX = Math.cos(kite.heading);
   const dirY = Math.sin(kite.heading);
   const windX = map.wind.x * map.windStrength;
@@ -127,6 +135,23 @@ function stepKite(kite: KiteState, map: GameMap, input: PilotInput, dt: number):
   const cappedY = speed > kite.def.topSpeed ? (nvy / speed) * kite.def.topSpeed : nvy;
 
   const next: KiteState = { ...kite, x: kite.x + cappedX * dt, y: kite.y + cappedY * dt, vx: cappedX, vy: cappedY, heading: kite.heading + input.steer * (kite.def.turnRate * (Math.PI / 180)) * dt, tension };
+
+  // Mantém a pipa dentro da área de voo: o céu e as laterais seguram a pipa,
+  // em vez de encerrar a partida quando ela sobe demais.
+  const margin = 24;
+  if (next.x < margin) {
+    next.x = margin;
+    next.vx = Math.abs(next.vx) * 0.4;
+  } else if (next.x > map.width - margin) {
+    next.x = map.width - margin;
+    next.vx = -Math.abs(next.vx) * 0.4;
+  }
+  const ceiling = 70;
+  if (next.y < ceiling) {
+    next.y = ceiling;
+    next.vy = Math.max(0, next.vy);
+  }
+
   next.trail.push({ x: next.x, y: next.y });
   if (next.trail.length > 34) next.trail.shift();
   return next;
@@ -206,15 +231,16 @@ export function step(state: GameState, inputs: { pull: number[]; steer: number[]
     const input0: PilotInput = { pull: inputs.pull[0] ?? 0, steer: inputs.steer[0] ?? 0 };
     const input1: PilotInput = state.mode === "ai" ? aiControl(next.kites[1], next.kites[0]) : { pull: inputs.pull[1] ?? 0, steer: inputs.steer[1] ?? 0 };
 
-    const a = stepKite(next.kites[0], map, input0, dt);
-    const b = stepKite(next.kites[1], map, input1, dt);
+    const a = stepKite(next.kites[0], map, input0, dt, next.kites[0].line);
+    const b = stepKite(next.kites[1], map, input1, dt, next.kites[1].line);
     next.kites[0] = a;
     next.kites[1] = b;
 
     for (const [i, kite] of next.kites.entries()) {
       if (!kite.active) continue;
       if (map.hasWater && kite.y > map.waterY) return finishWithKO(next, next.kites, i, "foi para a água");
-      if (kite.y < -40 || kite.y > map.height + 60 || kite.x < -60 || kite.x > map.width + 60) return finishWithKO(next, next.kites, i, "caiu do mapa");
+      if (!map.hasWater && kite.y > map.height * 0.5 - 6) return finishWithKO(next, next.kites, i, "bateu no chão");
+      if (kite.y > map.height + 60) return finishWithKO(next, next.kites, i, "caiu do mapa");
     }
 
     for (const [i, kite] of next.kites.entries()) {

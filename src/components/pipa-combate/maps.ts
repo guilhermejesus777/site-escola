@@ -61,9 +61,9 @@ export const MAPS: GameMap[] = [
     ground: "#9a8f86",
     obstacles: [
       { kind: "building", x: 40, y: 120, w: 150, h: 300 },
-      { kind: "building", x: 210, y: 220, w: 130, h: 220 },
+      { kind: "building", x: 320, y: 220, w: 130, h: 220 },
       { kind: "building", x: 620, y: 160, w: 150, h: 260 },
-      { kind: "building", x: 790, y: 240, w: 150, h: 180 },
+      { kind: "building", x: 940, y: 240, w: 150, h: 180 },
       { kind: "building", x: 480, y: 180, w: 110, h: 130 },
     ],
   },

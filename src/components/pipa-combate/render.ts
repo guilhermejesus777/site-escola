@@ -181,7 +181,7 @@ function drawKites(ctx: CanvasRenderingContext2D, state: GameState) {
     ctx.save();
     ctx.translate(kite.x, kite.y);
     ctx.rotate(kite.heading);
-    const size = kite.def.size;
+    const size = kite.def.size * 2;
     const halfLen = size * 1.7;
     const tailLen = 46 - kite.tension * 0.38;
     const dirX = Math.cos(kite.heading);
@@ -312,13 +312,13 @@ function drawHud(ctx: CanvasRenderingContext2D, state: GameState, map: GameMap, 
   ctx.fillText(`${Math.round(map.windStrength)}`, width / 2, 58);
 
   // Barras de tensão e vida
-  for (const kite of state.kites) {
-    if (!kite.active) continue;
+  state.kites.forEach((kite, index) => {
+    if (!kite.active) return;
     const y = height - 46;
-    const x = 16;
-    const w = width - 32;
+    const w = (width - 48) / 2;
+    const x = index === 0 ? 16 : width / 2 + 8;
     const barH = 10;
-    const t = ctx.createLinearGradient(0, y, 0, y + barH);
+    const t = ctx.createLinearGradient(x, y, x, y + barH);
     t.addColorStop(0, "#22c55e");
     t.addColorStop(1, "#ef4444");
     ctx.fillStyle = "rgba(15,23,42,0.55)";
@@ -335,10 +335,12 @@ function drawHud(ctx: CanvasRenderingContext2D, state: GameState, map: GameMap, 
     ctx.textAlign = "left";
     ctx.font = "700 14px system-ui, sans-serif";
     ctx.fillStyle = "#0f172a";
-    ctx.fillText(`${kite.def.nickname} · ${kite.def.name}`, x, y - 12);
+    ctx.fillText(kite.def.nickname, x, y - 12);
+    ctx.textAlign = "right";
     ctx.fillStyle = "#f8fafc";
-    ctx.fillText(`${Math.max(0, Math.ceil(kite.hp))}/${kite.maxHp}`, x + w - 64, y - 12);
-  }
+    ctx.fillText(`${Math.max(0, Math.ceil(kite.hp))}/${kite.maxHp}`, x + w, y - 12);
+    ctx.textAlign = "left";
+  });
   ctx.restore();
 }
 

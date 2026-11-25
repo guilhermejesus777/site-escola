@@ -5,6 +5,7 @@ import { Button, SectionCard } from "@/components/ui";
 import { IconArrowRight, IconBall, IconCheck, IconClock, IconMapPin, IconUsers } from "@/components/icons";
 import { MAPS } from "./maps";
 import { KITES } from "./kites";
+import { LINES, DEFAULT_LINE_ID } from "./lines";
 import { createInitialState, startFight, step } from "./engine";
 import { drawGame } from "./render";
 import type { GameState, KiteId } from "./types";
@@ -55,9 +56,16 @@ export function PipaCombate() {
   const [phase, setPhase] = useState<GameState["phase"]>("menu");
   const [koInfo, setKoInfo] = useState<{ winnerName: string; loserName: string; reason: string } | null>(null);
   const [mapId, setMapId] = useState<string>("praia");
-  const [kiteA, setKiteA] = useState<KiteId>("asa");
-  const [kiteB, setKiteB] = useState<KiteId>("asa");
+  const [kiteA, setKiteA] = useState<KiteId>(KITES[0].id);
+  const [kiteB, setKiteB] = useState<KiteId>(KITES[1].id);
+  const [lineA, setLineA] = useState<string>(DEFAULT_LINE_ID);
+  const [lineB, setLineB] = useState<string>(DEFAULT_LINE_ID);
   const [mode, setMode] = useState<Mode>("pvp");
+  const [kiteQuery, setKiteQuery] = useState("");
+
+  const filteredKites = KITES.filter((kite) =>
+    `${kite.nickname} ${kite.name} ${kite.type}`.toLowerCase().includes(kiteQuery.trim().toLowerCase()),
+  );
 
   useEffect(() => {
     phaseRef.current = phase;
@@ -150,8 +158,8 @@ export function PipaCombate() {
     };
   }, []);
 
-  const startFightWith = useCallback((nextMapId: string, nextKiteA: KiteId, nextKiteB: KiteId, nextMode: Mode) => {
-    stateRef.current = startFight(stateRef.current, nextMapId, nextKiteA, nextKiteB, nextMode);
+  const startFightWith = useCallback((nextMapId: string, nextKiteA: KiteId, nextKiteB: KiteId, nextMode: Mode, nextLineA?: string, nextLineB?: string) => {
+    stateRef.current = startFight(stateRef.current, nextMapId, nextKiteA, nextKiteB, nextMode, nextLineA, nextLineB);
     setKoInfo(null);
     setPhase("countdown");
     setScreen("game");
@@ -164,26 +172,34 @@ export function PipaCombate() {
   }, []);
 
   const rematch = useCallback(() => {
-    startFightWith(mapId, kiteA, kiteB, mode);
-  }, [mapId, kiteA, kiteB, mode, startFightWith]);
+    startFightWith(mapId, kiteA, kiteB, mode, lineA, lineB);
+  }, [mapId, kiteA, kiteB, mode, lineA, lineB, startFightWith]);
 
   const nextMap = useCallback(() => {
     const index = MAPS.findIndex((item) => item.id === mapId);
     const next = MAPS[(index + 1) % MAPS.length];
     setMapId(next.id);
-    startFightWith(next.id, kiteA, kiteB, mode);
-  }, [mapId, kiteA, kiteB, mode, startFightWith]);
+    startFightWith(next.id, kiteA, kiteB, mode, lineA, lineB);
+  }, [mapId, kiteA, kiteB, mode, lineA, lineB, startFightWith]);
 
   const nextKite = useCallback(
     (slot: "A" | "B") => {
       const current = slot === "A" ? kiteA : kiteB;
       const index = KITES.findIndex((kite) => kite.id === current);
       const next = KITES[(index + 1) % KITES.length];
+      const nextLineId = LINES[(LINES.findIndex((l) => l.id === (slot === "A" ? lineA : lineB)) + 1) % LINES.length].id;
       if (slot === "A") setKiteA(next.id);
       else setKiteB(next.id);
-      startFightWith(mapId, slot === "A" ? next.id : kiteA, slot === "B" ? next.id : kiteB, mode);
+      startFightWith(
+        mapId,
+        slot === "A" ? next.id : kiteA,
+        slot === "B" ? next.id : kiteB,
+        mode,
+        slot === "A" ? nextLineId : lineA,
+        slot === "B" ? nextLineId : lineB,
+      );
     },
-    [kiteA, kiteB, mapId, mode, startFightWith],
+    [kiteA, kiteB, mapId, mode, lineA, lineB, startFightWith],
   );
 
   const setPilotPull = useCallback((owner: number, value: number) => {
@@ -234,14 +250,25 @@ export function PipaCombate() {
         </SectionCard>
 
         <SectionCard title="Escolha as pipas" description="Cada pipa tem força, agilidade, potência e resistência diferentes.">
+          <input
+            type="search"
+            value={kiteQuery}
+            onChange={(event) => setKiteQuery(event.target.value)}
+            placeholder="Buscar pipa por nome ou tipo…"
+            className="mb-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-indigo-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+          />
+          <p className="mb-3 text-[11px] text-slate-500 dark:text-slate-400">
+            {filteredKites.length} de {KITES.length} pipas
+          </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Sua pipa</p>
-              <div className="flex flex-wrap gap-2">
-                {KITES.map((kite) => (
+              <div className="flex max-h-72 flex-wrap content-start gap-2 overflow-y-auto pr-1">
+                {filteredKites.map((kite) => (
                   <button
                     key={kite.id}
                     type="button"
+                    title={`${kite.type} · ${kite.name}`}
                     onClick={() => setKiteA(kite.id)}
                     className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
                       kiteA === kite.id
@@ -260,11 +287,12 @@ export function PipaCombate() {
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {mode === "ai" ? "Pipa do computador" : "Adversário"}
               </p>
-              <div className="flex flex-wrap gap-2">
-                {KITES.map((kite) => (
+              <div className="flex max-h-72 flex-wrap content-start gap-2 overflow-y-auto pr-1">
+                {filteredKites.map((kite) => (
                   <button
                     key={kite.id}
                     type="button"
+                    title={`${kite.type} · ${kite.name}`}
                     onClick={() => setKiteB(kite.id)}
                     className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
                       kiteB === kite.id
@@ -275,6 +303,53 @@ export function PipaCombate() {
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: kite.color }} />
                     {kite.nickname}
                     <span className="font-normal text-slate-500 dark:text-slate-400">({kite.hp} HP)</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Escolha as linhas" description="Cada linha muda a força do puxão, a liberação e o chute da pipa.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Sua linha</p>
+              <div className="flex max-h-72 flex-wrap content-start gap-2 overflow-y-auto pr-1">
+                {LINES.map((line) => (
+                  <button
+                    key={line.id}
+                    type="button"
+                    onClick={() => setLineA(line.id)}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                      lineA === line.id
+                        ? "border-indigo-400 bg-indigo-50 text-indigo-800 dark:border-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-200"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-indigo-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    }`}
+                  >
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: line.cor }} />
+                    {line.nom}
+                    <span className="font-normal text-slate-500 dark:text-slate-400">({line.preco})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Adversario</p>
+              <div className="flex max-h-72 flex-wrap content-start gap-2 overflow-y-auto pr-1">
+                {LINES.map((line) => (
+                  <button
+                    key={line.id}
+                    type="button"
+                    onClick={() => setLineB(line.id)}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                      lineB === line.id
+                        ? "border-rose-400 bg-rose-50 text-rose-800 dark:border-rose-500 dark:bg-rose-500/10 dark:text-rose-200"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-rose-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                    }`}
+                  >
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: line.cor }} />
+                    {line.nom}
+                    <span className="font-normal text-slate-500 dark:text-slate-400">({line.preco})</span>
                   </button>
                 ))}
               </div>
@@ -317,7 +392,7 @@ export function PipaCombate() {
           </div>
         </SectionCard>
 
-        <Button size="md" onClick={() => startFightWith(mapId, kiteA, kiteB, mode)}>
+        <Button size="md" onClick={() => startFightWith(mapId, kiteA, kiteB, mode, lineA, lineB)}>
           Começar voo <IconArrowRight width={16} height={16} />
         </Button>
 
