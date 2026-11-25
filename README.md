@@ -126,10 +126,10 @@ conta Google da escola; nesse caso o Google faz a verificação da senha.
 6. No Render, cadastre a mesma variável `NEXT_PUBLIC_GOOGLE_CLIENT_ID` e faça um novo deploy.
 
 Sem essa variável, a tela de login mostra um aviso de configuração e ninguém
-consegue entrar pelo Google. Os e-mails da lista fixa ficam em
-`src/lib/access.ts` (professores em `REGISTERED_TEACHERS` e alunos em
-`REGISTERED_STUDENTS`); os demais são cadastrados pelo administrador na área
-**Admin** e ficam no banco.
+consegue entrar pelo Google. A lista fixa em `src/lib/access.ts` agora contém
+apenas o administrador; **todos os demais precisam enviar uma solicitação de
+cadastro** e ser aprovados na área **Admin**, ficando na tabela `usuarios` do
+banco.
 
 ## Segurança
 
@@ -190,7 +190,7 @@ banco (o app já está preparado para isso):
 
 ## O que é simulado
 
-- **Login e permissões:** o acesso pode ser feito com **e-mail + senha individual** ou com a **conta Google**. O servidor valida a credencial e libera o perfil de **professor** apenas para os e-mails de `REGISTERED_TEACHERS` e o de **aluno** apenas para os e-mails de `REGISTERED_STUDENTS`, ambos em `src/lib/access.ts`. Os demais recebem a mensagem para falar com a coordenação. A senha real da conta Google nunca passa pelo app.
+- **Login e permissões:** o acesso pode ser feito com **e-mail + senha individual** ou com a **conta Google**. Só entram e-mails cadastrados: o administrador (lista fixa de `src/lib/access.ts`) e as contas aprovadas em **Admin** (tabela `usuarios`). Quem ainda não tem cadastro envia um pedido de acesso e aguarda aprovação. A senha real da conta Google nunca passa pelo app.
 - **Dados:** não há dados de exemplo. Reservas e atividades são criadas pelos usuários e ficam no PostgreSQL; sem banco, no navegador.
 - **Upload:** os arquivos não são enviados; só o nome e o tamanho são guardados.
 - **Configurações:** as senhas individuais são salvas de verdade; os demais ajustes da tela de configurações ainda são uma prévia e não são salvos.
