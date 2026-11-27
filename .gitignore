@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# jogo (GitHub Pages - exportacao estatica)
+/jogo/.next/
+/jogo/out/
+
 # production
 /build
 
